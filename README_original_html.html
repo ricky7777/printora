@@ -1,10 +1,70 @@
-{% schema %}
-{
-  "name": "Footer"
-}
-{% endschema %}
-<!-- Header -->
-    
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrintOra - Your Design, Your Rules</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'mint': '#A8E6CF',
+                        'mint-light': '#C8F0E0',
+                        'mint-dark': '#88D4AB',
+                        'pastel-pink': '#FFB6C1',
+                        'soft-gray': '#6B7280',
+                        'deep-gray': '#374151'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        .hero-curve {
+            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+        }
+        .soft-shadow {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+        }
+        .card-shadow {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased bg-white">
+    <!-- Header -->
+    <header class="fixed top-0 w-full bg-mint z-50">
+        <div class="max-w-7xl mx-auto px-8 py-6">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="text-white font-black text-2xl tracking-tight">
+                    PrintOra
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-12">
+                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Home</a>
+                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Catalog</a>
+                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Contact</a>
+                </nav>
+                
+                <!-- Cart Icon -->
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-deep-gray stroke-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6m0 0h14M7 13v6a2 2 0 002 2h6a2 2 0 002-2v-6" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </header>
 
     <!-- Hero Section -->
     <section class="relative bg-mint min-h-screen flex items-center overflow-hidden">
@@ -122,3 +182,5 @@
 
     <!-- Footer Spacer -->
     <div class="h-20 bg-white"></div>
+</body>
+</html>

@@ -1,195 +1,53 @@
 <!doctype html>
-<html class="no-js" lang="{{ request.locale.iso_code }}">
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="#7FD4C1">
-    <link rel="canonical" href="{{ canonical_url }}">
-
-    {%- if settings.favicon != blank -%}
-      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
-    {%- endif -%}
-
-    {%- unless settings.type_primary_font.system? -%}
-      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
-    {%- endunless -%}
-    
-    <!-- Inter Font -->
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrintOra - Your Design, Your Rules</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'mint': '#A8E6CF',
+                        'mint-light': '#C8F0E0',
+                        'mint-dark': '#88D4AB',
+                        'pastel-pink': '#FFB6C1',
+                        'soft-gray': '#6B7280',
+                        'deep-gray': '#374151'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
-
-    <title>
-      {{ page_title }}
-      {%- if current_tags %} &ndash; {{ 'general.meta.tags' | t: tags: current_tags.join(', ') }}{% endif -%}
-      {%- if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif -%}
-      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
-    </title>
-
-    {% if page_description %}
-      <meta name="description" content="{{ page_description | escape }}">
-    {% endif %}
-
-    {% render 'meta-tags' %}
-
-    <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
-    {{ content_for_header }}
-
-    {% render 'css-variables' %}
-
-    {% style %}
-      :root {
-        --color-primary: #7FD4C1;
-        --color-secondary: #FFB3BA;
-        --color-accent: #FFD3A5;
-        --color-dark: #4A4A6A;
-        --color-text: #333333;
-        --color-background: #FFFFFF;
-      }
-
-      *,
-      *::before,
-      *::after {
-        box-sizing: inherit;
-      }
-
-      html {
-        box-sizing: border-box;
-        font-size: 62.5%;
-        height: 100%;
-      }
-
-      body {
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        grid-template-columns: 100%;
-        min-height: 100vh;
-        margin: 0;
-        font-size: 1.5rem;
-        letter-spacing: 0.06rem;
-        line-height: 1.6;
-        font-family: var(--font-primary--family);
-        font-style: var(--font-primary--style);
-        font-weight: var(--font-primary--weight);
-        color: var(--color-foreground);
-        background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F7 100%);
-        overflow-x: hidden;
-      }
-
-      body.template-index {
-        overflow-y: hidden;
-      }
-
-      body.template-index main {
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 100px);
-        overflow: hidden;
-      }
-
-      body.template-index .shopify-section {
-        flex-shrink: 0;
-      }
-
-      body.template-index .homepage-hero.shopify-section {
-        flex: 0 0 85%;
-        min-height: 0;
-      }
-
-      body.template-index .homepage-features.shopify-section {
-        flex: 0 0 15%;
-        min-height: 0;
-      }
-
-      /* Accessibility: Skip to content link */
-      .visually-hidden {
-        position: absolute !important;
-        width: 1px !important;
-        height: 1px !important;
-        padding: 0 !important;
-        margin: -1px !important;
-        overflow: hidden !important;
-        clip: rect(0, 0, 0, 0) !important;
-        white-space: nowrap !important;
-        border: 0 !important;
-      }
-
-      .skip-to-content-link {
-        position: absolute;
-        top: -40px;
-        left: 0;
-        background: var(--color-dark);
-        color: var(--color-background);
-        padding: 0.8rem 1.5rem;
-        text-decoration: none;
-        z-index: 1000;
-        border-radius: 0 0 4px 0;
-        font-weight: 600;
-      }
-
-      .skip-to-content-link:focus {
-        top: 0;
-      }
-    {% endstyle %}
-
-    {{ 'base.css' | asset_url | stylesheet_tag }}
-
-    {%- if settings.type_primary_font != blank and settings.type_primary_font.system? == false -%}
-      {{ settings.type_primary_font | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
-    {%- endif -%}
-
-    <script>document.documentElement.className = document.documentElement.className.replace('no-js', 'js');</script>
+    <style>
+        .hero-curve {
+            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+        }
+        .soft-shadow {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+        }
+        .card-shadow {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+    <link rel="stylesheet" href="{{ 'original-inline.css' | asset_url }}">
+    {% comment %} Shopify content_for_header will be injected here {% endcomment %}
+    {% if content_for_header %}{{ content_for_header }}{% endif %}
   </head>
-
-  <body class="gradient{% if template.name == 'index' %} template-index{% endif %}">
-    <a class="skip-to-content-link button visually-hidden" href="#MainContent">
-      {{ 'accessibility.skip_to_text' | t }}
-    </a>
-
-    {%- if settings.cart_type == 'notification' -%}
-      {%- render 'cart-notification', color_scheme: settings.cart_notification_color_scheme -%}
-    {%- endif -%}
-
+  <body class="template-{{ template | replace: '.', '-' }}">
     {% section 'header' %}
-
-    <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
+    <main role="main">
       {{ content_for_layout }}
     </main>
-
     {% section 'footer' %}
-
-    <ul hidden>
-      <li id="a11y-refresh-page-message">{{ 'accessibility.refresh_page' | t }}</li>
-      <li id="a11y-new-window-message">{{ 'accessibility.link_messages.new_window' | t }}</li>
-    </ul>
-
-    <script>
-      window.shopUrl = '{{ request.origin }}';
-      window.routes = {
-        cart_add_url: '{{ routes.cart_add_url }}',
-        cart_change_url: '{{ routes.cart_change_url }}',
-        cart_update_url: '{{ routes.cart_update_url }}',
-        cart_url: '{{ routes.cart_url }}',
-        predictive_search_url: '{{ routes.predictive_search_url }}'
-      };
-
-      window.cartStrings = {
-        error: `{{ 'sections.cart.cart_error' | t }}`,
-        quantityError: `{{ 'sections.cart.cart_quantity_error_html' | t: quantity: '[quantity]' }}`
-      }
-
-      window.variantStrings = {
-        addToCart: `{{ 'products.product.add_to_cart' | t }}`,
-        soldOut: `{{ 'products.product.sold_out' | t }}`,
-        unavailable: `{{ 'products.product.unavailable' | t }}`,
-        unavailable_with_option: `{{ 'products.product.value_unavailable' | t: option_value: '[value]' }}`,
-      }
-    </script>
-
-    {%- if settings.predictive_search_enabled -%}
-      <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
-    {%- endif -%}
+    {% if content_for_footer %}{{ content_for_footer }}{% endif %}
   </body>
 </html>
-

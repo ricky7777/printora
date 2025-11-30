@@ -1,214 +1,29 @@
-<header class="header" role="banner">
-  <div class="header__container">
-    <div class="header__inner">
-      <div class="header__logo">
-        <a href="{{ routes.root_url }}" class="header__logo-link">
-          {%- if section.settings.logo_image != blank -%}
-            <img
-              src="{{ section.settings.logo_image | image_url: width: 300 }}"
-              alt="{{ shop.name }}"
-              class="header__logo-image"
-              width="300"
-              height="120"
-              loading="eager"
-            >
-          {%- elsif settings.logo != blank -%}
-            <img
-              src="{{ settings.logo | image_url: width: 300 }}"
-              alt="{{ shop.name }}"
-              class="header__logo-image"
-              width="300"
-              height="120"
-              loading="eager"
-            >
-          {%- elsif section.settings.logo_icon != blank -%}
-            <img
-              src="{{ section.settings.logo_icon | image_url: width: 300 }}"
-              alt="PrintOra"
-              class="header__logo-image"
-              width="300"
-              height="120"
-              loading="eager"
-            >
-          {%- else -%}
-            <div class="header__logo-text">
-              <span class="header__logo-text--print">Print</span><span class="header__logo-text--ora">Ora</span>
-            </div>
-          {%- endif -%}
-        </a>
-      </div>
-
-      <nav class="header__nav" role="navigation">
-        <ul class="header__menu">
-          {%- for link in linklists.main-menu.links -%}
-            <li class="header__menu-item">
-              <a href="{{ link.url }}" class="header__menu-link">
-                {{ link.title }}
-              </a>
-            </li>
-          {%- endfor -%}
-        </ul>
-      </nav>
-
-      <div class="header__actions">
-        <a href="{{ routes.cart_url }}" class="header__cart-link">
-          <svg aria-hidden="true" focusable="false" role="presentation" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6m0 0h14M7 13v6a2 2 0 002 2h6a2 2 0 002-2v-6"/>
-          </svg>
-          <span class="visually-hidden">Cart</span>
-        </a>
-      </div>
-    </div>
-  </div>
-</header>
-
-<style>
-  .header {
-    background: #A8E6CF;
-    backdrop-filter: none;
-    border-bottom: none;
-    padding: 1.5rem 0;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 50;
-    box-shadow: none;
-  }
-
-  .header__container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 2rem;
-  }
-
-  .header__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .header__logo {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .header__logo-link {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    text-decoration: none;
-  }
-
-  .header__logo-image {
-    height: auto;
-    max-height: 50px;
-    width: auto;
-    max-width: 180px;
-    object-fit: contain;
-    display: block;
-  }
-
-  @media screen and (max-width: 749px) {
-    .header__logo-image {
-      max-height: 40px;
-      max-width: 150px;
-    }
-  }
-
-  .header__logo-text {
-    font-size: 2.4rem;
-    font-weight: 900;
-    font-family: var(--font-primary--family);
-    line-height: 1;
-    display: flex;
-    align-items: baseline;
-    color: #FFFFFF;
-    letter-spacing: -0.025em;
-  }
-
-  .header__logo-text--print {
-    color: #FFFFFF;
-  }
-
-  .header__logo-text--ora {
-    color: #FFFFFF;
-  }
-
-  .header__nav {
-    display: none;
-  }
-
-  @media screen and (min-width: 768px) {
-    .header__nav {
-      display: flex;
-      align-items: center;
-    }
-  }
-
-  .header__menu {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    gap: 3rem;
-  }
-
-  .header__menu-link {
-    color: #1F2937;
-    text-decoration: none;
-    font-weight: 300;
-    font-size: 1rem;
-    transition: opacity 0.3s ease;
-    padding: 0;
-  }
-
-  .header__menu-link:hover {
-    opacity: 0.7;
-  }
-
-  .header__actions {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .header__cart-link {
-    display: flex;
-    align-items: center;
-    color: #88D4AB;
-    text-decoration: none;
-    padding: 0;
-  }
-
-  .header__cart-link:hover {
-    opacity: 0.8;
-  }
-
-  .header__cart-link svg {
-    width: 24px;
-    height: 24px;
-    stroke-width: 1.5;
-  }
-</style>
-
 {% schema %}
 {
-  "name": "Header",
-  "settings": [
-    {
-      "type": "image_picker",
-      "id": "logo_icon",
-      "label": "Logo Icon",
-      "info": "Upload T-shirt icon image"
-    },
-    {
-      "type": "image_picker",
-      "id": "logo_image",
-      "label": "Logo Image",
-      "info": "Upload PrintOra logo image (will replace text logo)"
-    }
-  ]
+  "name": "Header"
 }
 {% endschema %}
-
+<header class="fixed top-0 w-full bg-mint z-50">
+        <div class="max-w-7xl mx-auto px-8 py-6">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="text-white font-black text-2xl tracking-tight">
+                    PrintOra
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-12">
+                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Home</a>
+                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Catalog</a>
+                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Contact</a>
+                </nav>
+                
+                <!-- Cart Icon -->
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-deep-gray stroke-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6m0 0h14M7 13v6a2 2 0 002 2h6a2 2 0 002-2v-6" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </header>
