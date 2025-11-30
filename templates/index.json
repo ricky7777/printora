@@ -8,8 +8,8 @@
         "padding_bottom": 0,
         "autoplay_interval": 5
       },
-      "blocks": [
-        {
+      "blocks": {
+        "slide-0": {
           "type": "slide",
           "settings": {
             "heading": "歡迎來到 PrintOra",
@@ -18,7 +18,7 @@
             "button_link": "/collections/all"
           }
         },
-        {
+        "slide-1": {
           "type": "slide",
           "settings": {
             "heading": "客製化你的專屬商品",
@@ -27,7 +27,7 @@
             "button_link": "/collections/all"
           }
         }
-      ],
+      },
       "block_order": [
         "slide-0",
         "slide-1"

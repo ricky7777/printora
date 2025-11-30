@@ -1,0 +1,35 @@
+{%- comment -%}
+  Cart notification snippet (simplified version)
+{%- endcomment -%}
+<div class="cart-notification" data-cart-notification style="display: none;">
+  <div class="cart-notification__content">
+    <p>商品已加入購物車</p>
+  </div>
+</div>
+
+<style>
+  .cart-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: var(--color-primary);
+    color: var(--color-background);
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+</style>
+

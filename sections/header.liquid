@@ -1,0 +1,128 @@
+<header class="header" role="banner">
+  <div class="page-width">
+    <div class="header__inner">
+      <div class="header__logo">
+        {%- if settings.logo != blank -%}
+          <a href="{{ routes.root_url }}" class="header__logo-link">
+            <img
+              src="{{ settings.logo | image_url: width: 200 }}"
+              alt="{{ shop.name }}"
+              width="{{ settings.logo.width }}"
+              height="{{ settings.logo.height }}"
+              loading="eager"
+            >
+          </a>
+        {%- else -%}
+          <a href="{{ routes.root_url }}" class="header__logo-text">
+            {{ shop.name }}
+          </a>
+        {%- endif -%}
+      </div>
+
+      <nav class="header__nav" role="navigation">
+        <ul class="header__menu">
+          {%- for link in linklists.main-menu.links -%}
+            <li class="header__menu-item">
+              <a href="{{ link.url }}" class="header__menu-link">
+                {{ link.title }}
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+
+      <div class="header__actions">
+        <a href="{{ routes.cart_url }}" class="header__cart-link">
+          <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-cart" viewBox="0 0 18 19">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 15.5C5.67 15.5 5 16.17 5 17s.67 1.5 1.5 1.5S8 17.83 8 17s-.67-1.5-1.5-1.5zM15.5 15.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5S17 17.83 17 17s-.67-1.5-1.5-1.5zM0 1h2.5l1.5 7h11l1.5-7H0zm2.5 8L4 3h11l1.5 6H2.5z"/>
+          </svg>
+          <span class="visually-hidden">購物車</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .header {
+    background-color: var(--color-background);
+    border-bottom: 1px solid rgba(74, 74, 106, 0.1);
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header__logo-link,
+  .header__logo-text {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    text-decoration: none;
+  }
+
+  .header__logo img {
+    max-height: 50px;
+    width: auto;
+  }
+
+  .header__nav {
+    display: none;
+  }
+
+  @media screen and (min-width: 990px) {
+    .header__nav {
+      display: block;
+    }
+  }
+
+  .header__menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 2rem;
+  }
+
+  .header__menu-link {
+    color: var(--color-text);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+
+  .header__menu-link:hover {
+    color: var(--color-primary);
+  }
+
+  .header__actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .header__cart-link {
+    color: var(--color-dark);
+    display: flex;
+    align-items: center;
+  }
+
+  .header__cart-link svg {
+    width: 24px;
+    height: 24px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": []
+}
+{% endschema %}
+
