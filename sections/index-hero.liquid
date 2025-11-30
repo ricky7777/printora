@@ -1,0 +1,199 @@
+{{ 'section-index-hero.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'index-hero.js' | asset_url }}" defer="defer"></script>
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="index-hero section-{{ section.id }}-padding color-{{ section.settings.color_scheme }} gradient" data-autoplay-interval="{{ section.settings.autoplay_interval | times: 1000 }}">
+  <div class="index-hero__slider" data-hero-slider>
+    {%- for block in section.blocks -%}
+      <div class="index-hero__slide {% if forloop.first %}active{% endif %}" 
+           data-slide-index="{{ forloop.index0 }}" 
+           {{ block.shopify_attributes }}>
+        {%- if block.settings.image != blank -%}
+          <div class="index-hero__image-wrapper">
+            <img
+              srcset="{%- if block.settings.image.width >= 375 -%}{{ block.settings.image | image_url: width: 375 }} 375w,{%- endif -%}
+                      {%- if block.settings.image.width >= 750 -%}{{ block.settings.image | image_url: width: 750 }} 750w,{%- endif -%}
+                      {%- if block.settings.image.width >= 1100 -%}{{ block.settings.image | image_url: width: 1100 }} 1100w,{%- endif -%}
+                      {%- if block.settings.image.width >= 1500 -%}{{ block.settings.image | image_url: width: 1500 }} 1500w,{%- endif -%}
+                      {%- if block.settings.image.width >= 1780 -%}{{ block.settings.image | image_url: width: 1780 }} 1780w,{%- endif -%}
+                      {%- if block.settings.image.width >= 2000 -%}{{ block.settings.image | image_url: width: 2000 }} 2000w,{%- endif -%}
+                      {%- if block.settings.image.width >= 3000 -%}{{ block.settings.image | image_url: width: 3000 }} 3000w,{%- endif -%}
+                      {{ block.settings.image | image_url }} {{ block.settings.image.width }}w"
+              src="{{ block.settings.image | image_url: width: 1500 }}"
+              sizes="100vw"
+              alt="{{ block.settings.image.alt | escape }}"
+              loading="lazy"
+              width="{{ block.settings.image.width }}"
+              height="{{ block.settings.image.height }}"
+              class="index-hero__image"
+            >
+          </div>
+        {%- else -%}
+          <div class="index-hero__image-wrapper">
+            {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+          </div>
+        {%- endif -%}
+
+        <div class="index-hero__content">
+          <div class="page-width">
+            <div class="index-hero__text-wrapper">
+              {%- if block.settings.heading != blank -%}
+                <h2 class="index-hero__heading h1">
+                  {{ block.settings.heading }}
+                </h2>
+              {%- endif -%}
+
+              {%- if block.settings.text != blank -%}
+                <div class="index-hero__text rte">
+                  {{ block.settings.text }}
+                </div>
+              {%- endif -%}
+
+              {%- if block.settings.button_label != blank -%}
+                <a href="{{ block.settings.button_link }}" class="index-hero__button button button--primary">
+                  {{ block.settings.button_label }}
+                </a>
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+
+  {%- if section.blocks.size > 1 -%}
+    <div class="index-hero__controls">
+      <button type="button" class="index-hero__prev" aria-label="{{ 'sections.slideshow.previous_slide' | t }}" data-slider-prev>
+        <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-chevron-left" viewBox="0 0 284.49 498.98">
+          <path d="M249.49 0l-35 35L48.51 249.49 214.49 415.46l35 35L0 249.49z"/>
+        </svg>
+      </button>
+      <button type="button" class="index-hero__next" aria-label="{{ 'sections.slideshow.next_slide' | t }}" data-slider-next>
+        <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-chevron-right" viewBox="0 0 284.49 498.98">
+          <path d="M35 498.98l35-35L245.98 249.49 80.02 83.52l-35-35L284.49 249.49z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="index-hero__dots" data-slider-dots>
+      {%- for block in section.blocks -%}
+        <button type="button" 
+                class="index-hero__dot {% if forloop.first %}active{% endif %}" 
+                aria-label="{{ 'sections.slideshow.load_slide' | t: slide_number: forloop.index }}"
+                data-slide-to="{{ forloop.index0 }}">
+          <span class="visually-hidden">{{ 'sections.slideshow.load_slide' | t: slide_number: forloop.index }}</span>
+        </button>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "首頁 Banner",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "配色方案",
+      "default": "scheme-1"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "上方間距",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "下方間距",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "autoplay_interval",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "秒",
+      "label": "自動播放間隔",
+      "default": 5,
+      "info": "設為 0 則關閉自動播放"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "輪播項目",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "圖片"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "default": "歡迎來到 PrintOra",
+          "label": "標題"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "default": "<p>發現無限創意，打造專屬風格</p>",
+          "label": "描述文字"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "default": "立即選購",
+          "label": "按鈕文字"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "按鈕連結"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "首頁 Banner",
+      "blocks": [
+        {
+          "type": "slide"
+        },
+        {
+          "type": "slide"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+

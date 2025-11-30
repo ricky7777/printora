@@ -1,0 +1,35 @@
+{
+  "general": {
+    "meta": {
+      "tags": "標籤：%s",
+      "page": "第 %s 頁"
+    }
+  },
+  "accessibility": {
+    "skip_to_text": "跳至主要內容",
+    "refresh_page": "重新整理頁面以載入新內容",
+    "link_messages": {
+      "new_window": "（在新視窗開啟）"
+    }
+  },
+  "sections": {
+    "slideshow": {
+      "previous_slide": "上一張投影片",
+      "next_slide": "下一張投影片",
+      "load_slide": "載入投影片 %s"
+    },
+    "cart": {
+      "cart_error": "購物車發生錯誤",
+      "cart_quantity_error_html": "只能新增 %s 個此商品到購物車"
+    }
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "加入購物車",
+      "sold_out": "已售完",
+      "unavailable": "無法使用",
+      "value_unavailable": "選項 %s 無法使用"
+    }
+  }
+}
+

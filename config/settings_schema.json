@@ -1,0 +1,80 @@
+[
+  {
+    "name": "主題設定",
+    "settings": [
+      {
+        "type": "header",
+        "content": "品牌設定"
+      },
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo"
+      },
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "網站圖示 (Favicon)"
+      },
+      {
+        "type": "header",
+        "content": "字型設定"
+      },
+      {
+        "type": "font_picker",
+        "id": "type_header_font",
+        "default": "assistant_n4",
+        "label": "標題字型"
+      },
+      {
+        "type": "font_picker",
+        "id": "type_body_font",
+        "default": "assistant_n4",
+        "label": "內文字型"
+      },
+      {
+        "type": "header",
+        "content": "顏色設定"
+      },
+      {
+        "type": "paragraph",
+        "content": "PrintOra 品牌顏色已預設在主題中"
+      },
+      {
+        "type": "header",
+        "content": "購物車設定"
+      },
+      {
+        "type": "select",
+        "id": "cart_type",
+        "options": [
+          {
+            "value": "drawer",
+            "label": "抽屜式"
+          },
+          {
+            "value": "page",
+            "label": "頁面"
+          },
+          {
+            "value": "notification",
+            "label": "通知"
+          }
+        ],
+        "default": "drawer",
+        "label": "購物車類型"
+      },
+      {
+        "type": "header",
+        "content": "搜尋設定"
+      },
+      {
+        "type": "checkbox",
+        "id": "predictive_search_enabled",
+        "default": true,
+        "label": "啟用預測搜尋"
+      }
+    ]
+  }
+]
+

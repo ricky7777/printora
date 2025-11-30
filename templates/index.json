@@ -1,0 +1,41 @@
+{
+  "sections": {
+    "index-hero": {
+      "type": "index-hero",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "autoplay_interval": 5
+      },
+      "blocks": [
+        {
+          "type": "slide",
+          "settings": {
+            "heading": "歡迎來到 PrintOra",
+            "text": "<p>發現無限創意，打造專屬風格</p>",
+            "button_label": "立即選購",
+            "button_link": "/collections/all"
+          }
+        },
+        {
+          "type": "slide",
+          "settings": {
+            "heading": "客製化你的專屬商品",
+            "text": "<p>高品質印刷，完美呈現你的創意</p>",
+            "button_label": "開始設計",
+            "button_link": "/collections/all"
+          }
+        }
+      ],
+      "block_order": [
+        "slide-0",
+        "slide-1"
+      ]
+    }
+  },
+  "order": [
+    "index-hero"
+  ]
+}
+
