@@ -1,0 +1,348 @@
+{% comment %}
+  PrintOra Homepage Features Section
+  Showcase key features/services
+{% endcomment %}
+
+<section class="homepage-features shopify-section color-{{ section.settings.color_scheme }}">
+  <div class="homepage-features__container">
+    {%- if section.settings.heading != blank -%}
+      <h2 class="homepage-features__heading">
+        {{ section.settings.heading }}
+      </h2>
+    {%- endif -%}
+
+    <div class="homepage-features__grid">
+      {%- for block in section.blocks -%}
+        <div class="homepage-features__item" {{ block.shopify_attributes }}>
+          {%- if block.settings.icon != blank -%}
+            <div class="homepage-features__icon">
+              <img
+                src="{{ block.settings.icon | image_url: width: 80 }}"
+                alt="{{ block.settings.icon.alt | escape }}"
+                width="80"
+                height="80"
+                loading="lazy"
+              >
+            </div>
+          {%- else -%}
+            <div class="homepage-features__icon-placeholder">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/>
+                <path d="M24 14v20M14 24h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+          {%- endif -%}
+
+          {%- if block.settings.title != blank -%}
+            <h3 class="homepage-features__title">
+              {{ block.settings.title }}
+            </h3>
+          {%- endif -%}
+
+          {%- if block.settings.text != blank -%}
+            <div class="homepage-features__text">
+              {{ block.settings.text }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .homepage-features.shopify-section {
+    display: flex !important;
+    grid-template-columns: none !important;
+    padding: 0;
+    background: #5EC4B0;
+    position: relative;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    margin-top: 0;
+  }
+
+  .homepage-features.shopify-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 65%;
+    height: 100%;
+    background: #FFFFFF;
+    z-index: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .homepage-features.shopify-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 60%;
+    width: 45%;
+    height: 100%;
+    background: #5EC4B0;
+    border-radius: 0 0 0 80px;
+    z-index: 0;
+  }
+
+  @media screen and (min-width: 990px) {
+    .homepage-features.shopify-section::before {
+      width: 70%;
+    }
+
+    .homepage-features.shopify-section::after {
+      left: 65%;
+      width: 40%;
+      border-radius: 0 0 0 120px;
+    }
+  }
+
+
+  @media screen and (min-width: 990px) {
+    .homepage-features.shopify-section {
+      padding: 3rem 0;
+    }
+  }
+
+  .homepage-features__container {
+    max-width: var(--page-width, 1400px);
+    margin: 0 auto;
+    padding: 2rem 2rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .homepage-features__heading {
+    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #5EC4B0;
+    position: relative;
+    z-index: 2;
+  }
+
+  @media screen and (min-width: 990px) {
+    .homepage-features__heading {
+      margin-bottom: 2rem;
+    }
+  }
+
+  .homepage-features__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  @media screen and (min-width: 750px) {
+    .homepage-features__grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .homepage-features__grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+  }
+
+  .homepage-features__item {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 2px solid rgba(94, 196, 176, 0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(94, 196, 176, 0.15);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  .homepage-features__item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #7FD4C1, #FFB3BA, #FFD3A5);
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+  }
+
+  @media screen and (min-width: 750px) {
+    .homepage-features__item {
+      padding: 2rem;
+    }
+  }
+
+  .homepage-features__item:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(127, 212, 193, 0.25),
+                0 10px 20px rgba(255, 179, 186, 0.15);
+    border-color: rgba(127, 212, 193, 0.4);
+    background: rgba(255, 255, 255, 1);
+  }
+
+  .homepage-features__item:hover::before {
+    transform: scaleX(1);
+  }
+
+  .homepage-features__icon {
+    margin: 0 auto 1.5rem;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, 
+      rgba(127, 212, 193, 0.2) 0%, 
+      rgba(255, 211, 165, 0.15) 50%,
+      rgba(255, 179, 186, 0.2) 100%);
+    border-radius: 50%;
+    padding: 1rem;
+    box-shadow: 0 8px 20px rgba(127, 212, 193, 0.2),
+                inset 0 2px 4px rgba(255, 255, 255, 0.5);
+    transition: all 0.4s ease;
+  }
+
+  .homepage-features__item:hover .homepage-features__icon {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 30px rgba(127, 212, 193, 0.3),
+                inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  }
+
+  .homepage-features__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .homepage-features__icon-placeholder {
+    margin: 0 auto 1.5rem;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary-button-background);
+  }
+
+  .homepage-features__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2D2D44;
+    transition: color 0.3s ease;
+  }
+
+  .homepage-features__item:hover .homepage-features__title {
+    color: #4A4A6A;
+  }
+
+  .homepage-features__text {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: #4A4A6A;
+  }
+
+  .homepage-features__text p {
+    color: #4A4A6A;
+  }
+
+  .homepage-features__text p {
+    margin: 0;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Homepage Features",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Why Choose PrintOra?",
+      "label": "Heading"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "feature",
+      "name": "Feature",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "default": "Premium Quality Printing",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "default": "<p>Top-tier printing technology ensures crisp, durable designs</p>",
+          "label": "Description"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage Features",
+      "blocks": [
+        {
+          "type": "feature",
+          "settings": {
+            "title": "Premium Quality Printing",
+            "text": "<p>Top-tier printing technology ensures crisp, durable designs</p>"
+          }
+        },
+        {
+          "type": "feature",
+          "settings": {
+            "title": "Fast Shipping",
+            "text": "<p>Receive your order within 3-5 business days</p>"
+          }
+        },
+        {
+          "type": "feature",
+          "settings": {
+            "title": "Custom Design",
+            "text": "<p>Upload your design and we'll bring it to life perfectly</p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+

@@ -1,0 +1,410 @@
+{% comment %}
+  PrintOra Homepage Hero Section
+  Professional and friendly design for custom T-shirt store
+{% endcomment %}
+
+<section class="homepage-hero shopify-section color-{{ section.settings.color_scheme }}">
+  <div class="homepage-hero__container">
+    <div class="homepage-hero__content">
+      <div class="homepage-hero__text">
+        {%- if section.settings.subheading != blank -%}
+          <div class="homepage-hero__subheading">
+            {{ section.settings.subheading }}
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.heading != blank -%}
+          <div class="homepage-hero__heading-wrapper">
+            <div>
+              <h1 class="homepage-hero__heading">
+                {{ section.settings.heading }}
+              </h1>
+              <div class="homepage-hero__heading-decoration">
+                <div class="homepage-hero__heading-decoration-line homepage-hero__heading-decoration-line--teal"></div>
+                <div class="homepage-hero__heading-decoration-line homepage-hero__heading-decoration-line--orange"></div>
+              </div>
+            </div>
+            {%- if section.settings.heading_icon != blank -%}
+              <div class="homepage-hero__heading-icon">
+                <img
+                  src="{{ section.settings.heading_icon | image_url: width: 200 }}"
+                  alt="T-Shirt Icon"
+                  width="200"
+                  height="200"
+                  loading="eager"
+                >
+              </div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.text != blank -%}
+          <div class="homepage-hero__description">
+            {{ section.settings.text }}
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.button_label != blank -%}
+          <a href="{{ section.settings.button_link }}" class="homepage-hero__button button button--primary">
+            {{ section.settings.button_label }}
+            <svg class="homepage-hero__button-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.image != blank -%}
+        <div class="homepage-hero__image">
+          <img
+            srcset="{%- if section.settings.image.width >= 375 -%}{{ section.settings.image | image_url: width: 375 }} 375w,{%- endif -%}
+                    {%- if section.settings.image.width >= 750 -%}{{ section.settings.image | image_url: width: 750 }} 750w,{%- endif -%}
+                    {%- if section.settings.image.width >= 1100 -%}{{ section.settings.image | image_url: width: 1100 }} 1100w,{%- endif -%}
+                    {%- if section.settings.image.width >= 1500 -%}{{ section.settings.image | image_url: width: 1500 }} 1500w,{%- endif -%}
+                    {{ section.settings.image | image_url }} {{ section.settings.image.width }}w"
+            src="{{ section.settings.image | image_url: width: 1500 }}"
+            sizes="(min-width: 990px) 50vw, 100vw"
+            alt="{{ section.settings.image.alt | escape }}"
+            loading="eager"
+            width="{{ section.settings.image.width }}"
+            height="{{ section.settings.image.height }}"
+          >
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .homepage-hero.shopify-section {
+    display: flex !important;
+    grid-template-columns: none !important;
+    padding: 0;
+    background: #5EC4B0;
+    position: relative;
+    overflow: hidden;
+    align-items: stretch;
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+  }
+
+  .homepage-hero.shopify-section::before {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 70%;
+    height: 80%;
+    background: #FFFFFF;
+    border-radius: 50% 40% 60% 30%;
+    transform: rotate(15deg);
+    z-index: 1;
+    opacity: 0.98;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+  }
+
+  @media screen and (min-width: 990px) {
+    .homepage-hero {
+      padding: 3rem 0;
+    }
+  }
+
+
+  .homepage-hero__container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  @media screen and (min-width: 990px) {
+    .homepage-hero__container {
+      grid-template-columns: 1.2fr 0.8fr;
+    }
+  }
+
+  .homepage-hero__content {
+    display: contents;
+  }
+
+  .homepage-hero__text {
+    padding: 4rem 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    min-height: 100%;
+    text-align: left;
+    position: relative;
+    z-index: 3;
+  }
+
+  @media screen and (min-width: 990px) {
+    .homepage-hero__text {
+      padding: 6rem 5rem 6rem 5rem;
+    }
+  }
+
+  .homepage-hero__heading-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .homepage-hero__heading {
+    font-size: clamp(3rem, 7vw, 6.5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    margin: 0 0 1.5rem 0;
+    color: #111827;
+    letter-spacing: -0.04em;
+    flex: 1;
+    min-width: 200px;
+    font-family: var(--font-primary--family);
+    position: relative;
+    z-index: 4;
+  }
+
+  .homepage-hero__heading-decoration {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 4;
+  }
+
+  .homepage-hero__heading-decoration-line {
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  .homepage-hero__heading-decoration-line--teal {
+    width: 40px;
+    background: #5EC4B0;
+  }
+
+  .homepage-hero__heading-decoration-line--orange {
+    width: 40px;
+    background: #FF9CA5;
+  }
+
+
+  .homepage-hero__heading-icon {
+    flex-shrink: 0;
+    width: clamp(120px, 15vw, 200px);
+    height: clamp(120px, 15vw, 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .homepage-hero__heading-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  @media screen and (max-width: 749px) {
+    .homepage-hero__heading-wrapper {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .homepage-hero__heading-icon {
+      width: 100px;
+      height: 100px;
+    }
+  }
+
+  .homepage-hero__subheading {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(31, 41, 55, 0.8);
+    margin-bottom: 1.5rem;
+    font-family: var(--font-primary--family);
+  }
+
+  @media screen and (min-width: 990px) {
+    .homepage-hero__heading {
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  .homepage-hero__description {
+    font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+    line-height: 1.8;
+    color: rgba(31, 41, 55, 0.85);
+    margin-bottom: 3rem;
+    font-weight: 400;
+    max-width: 90%;
+    position: relative;
+    z-index: 4;
+  }
+
+  .homepage-hero__description p {
+    color: rgba(31, 41, 55, 0.85);
+    margin: 0;
+    font-size: inherit;
+  }
+
+  @media screen and (min-width: 990px) {
+    .homepage-hero__description {
+      margin-bottom: 2rem;
+    }
+  }
+
+  .homepage-hero__description p {
+    margin: 0;
+  }
+
+  .homepage-hero__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 2.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: #FF9CA5;
+    color: #FFFFFF;
+    border: none;
+    width: fit-content;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    position: relative;
+    z-index: 4;
+  }
+
+  .homepage-hero__button:hover {
+    background: #FF8A95;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 156, 165, 0.6);
+  }
+
+  .homepage-hero__button-icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+
+  .homepage-hero__image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    padding: 2rem;
+  }
+
+  .homepage-hero__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    transform: rotate(15deg) translateY(-10px);
+    filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.2));
+    transition: transform 0.5s ease;
+  }
+
+  .homepage-hero__image:hover img {
+    transform: rotate(12deg) translateY(-15px) scale(1.03);
+  }
+
+  @media screen and (max-width: 989px) {
+    .homepage-hero__image {
+      order: -1;
+      height: 40vh;
+      min-height: 300px;
+    }
+
+    .homepage-hero__image img {
+      transform: rotate(-5deg) translateY(0);
+    }
+
+    .homepage-hero__text {
+      padding: 3rem 2rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Homepage Hero",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "default": "T-Shirt Print",
+      "label": "Subheading"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Your Design — Your Rules",
+      "label": "Heading"
+    },
+    {
+      "type": "image_picker",
+      "id": "heading_icon",
+      "label": "Heading Icon",
+      "info": "Upload T-shirt icon image to display next to the heading"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "default": "<p>Professional printing technology that perfectly brings your creative designs to life<br>From concept to finished product, we're here to make every idea a reality</p>",
+      "label": "Description"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "default": "Upload Your Design",
+      "label": "Button label"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link",
+      "default": "/collections/all"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage Hero"
+    }
+  ]
+}
+{% endschema %}
+
