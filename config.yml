@@ -1,7 +1,0 @@
-development:
-  password: "dulowl"
-  theme_id: ""
-  store: "wjrnpu-kz.myshopify.com"
-  ignore_files:
-    - config/settings_data.json
-
