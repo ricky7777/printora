@@ -54,64 +54,18 @@
   .homepage-features.shopify-section {
     display: flex !important;
     grid-template-columns: none !important;
-    padding: 0;
-    background: #5EC4B0;
+    padding: 8rem 0;
+    background: #FFFFFF;
     position: relative;
     align-items: flex-start;
     justify-content: center;
-    min-height: 0;
-    height: 100%;
-    overflow-y: auto;
     margin-top: 0;
   }
 
-  .homepage-features.shopify-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 65%;
-    height: 100%;
-    background: #FFFFFF;
-    z-index: 0;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  }
-
-  .homepage-features.shopify-section::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 60%;
-    width: 45%;
-    height: 100%;
-    background: #5EC4B0;
-    border-radius: 0 0 0 80px;
-    z-index: 0;
-  }
-
-  @media screen and (min-width: 990px) {
-    .homepage-features.shopify-section::before {
-      width: 70%;
-    }
-
-    .homepage-features.shopify-section::after {
-      left: 65%;
-      width: 40%;
-      border-radius: 0 0 0 120px;
-    }
-  }
-
-
-  @media screen and (min-width: 990px) {
-    .homepage-features.shopify-section {
-      padding: 3rem 0;
-    }
-  }
-
   .homepage-features__container {
-    max-width: var(--page-width, 1400px);
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 2rem 2rem;
+    padding: 0 2rem;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -122,40 +76,34 @@
   }
 
   .homepage-features__heading {
-    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+    font-size: 2.25rem;
     font-weight: 700;
     text-align: center;
-    margin-bottom: 1.5rem;
-    color: #5EC4B0;
+    margin-bottom: 5rem;
+    color: #88D4AB;
     position: relative;
     z-index: 2;
   }
 
   @media screen and (min-width: 990px) {
     .homepage-features__heading {
-      margin-bottom: 2rem;
+      margin-bottom: 5rem;
     }
   }
 
   .homepage-features__grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 3rem;
     position: relative;
     z-index: 2;
+    width: 100%;
   }
 
   @media screen and (min-width: 750px) {
     .homepage-features__grid {
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-    }
-  }
-
-  @media screen and (min-width: 990px) {
-    .homepage-features__grid {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
+      gap: 3rem;
     }
   }
 
@@ -192,81 +140,42 @@
     }
   }
 
-  .homepage-features__item:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(127, 212, 193, 0.25),
-                0 10px 20px rgba(255, 179, 186, 0.15);
-    border-color: rgba(127, 212, 193, 0.4);
-    background: rgba(255, 255, 255, 1);
-  }
 
-  .homepage-features__item:hover::before {
-    transform: scaleX(1);
-  }
-
-  .homepage-features__icon {
-    margin: 0 auto 1.5rem;
-    width: 90px;
-    height: 90px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, 
-      rgba(127, 212, 193, 0.2) 0%, 
-      rgba(255, 211, 165, 0.15) 50%,
-      rgba(255, 179, 186, 0.2) 100%);
-    border-radius: 50%;
-    padding: 1rem;
-    box-shadow: 0 8px 20px rgba(127, 212, 193, 0.2),
-                inset 0 2px 4px rgba(255, 255, 255, 0.5);
-    transition: all 0.4s ease;
-  }
-
-  .homepage-features__item:hover .homepage-features__icon {
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: 0 12px 30px rgba(127, 212, 193, 0.3),
-                inset 0 2px 4px rgba(255, 255, 255, 0.6);
-  }
-
-  .homepage-features__icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-
+  .homepage-features__icon,
   .homepage-features__icon-placeholder {
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 2rem;
     width: 80px;
     height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-primary-button-background);
+    border-radius: 50%;
+    border: 2px solid #A8E6CF;
+    color: #A8E6CF;
+  }
+
+  .homepage-features__icon img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
   }
 
   .homepage-features__title {
     font-size: 1.5rem;
-    font-weight: 600;
+    font-weight: 900;
     margin-bottom: 1rem;
-    color: #2D2D44;
-    transition: color 0.3s ease;
-  }
-
-  .homepage-features__item:hover .homepage-features__title {
-    color: #4A4A6A;
+    color: #374151;
   }
 
   .homepage-features__text {
-    font-size: 1.125rem;
-    line-height: 1.7;
-    color: #4A4A6A;
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #6B7280;
+    font-weight: 300;
   }
 
   .homepage-features__text p {
-    color: #4A4A6A;
-  }
-
-  .homepage-features__text p {
+    color: #6B7280;
     margin: 0;
   }
 {% endstylesheet %}

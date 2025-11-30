@@ -52,8 +52,8 @@
 
       <div class="header__actions">
         <a href="{{ routes.cart_url }}" class="header__cart-link">
-          <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-cart" viewBox="0 0 18 19">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 15.5C5.67 15.5 5 16.17 5 17s.67 1.5 1.5 1.5S8 17.83 8 17s-.67-1.5-1.5-1.5zM15.5 15.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5S17 17.83 17 17s-.67-1.5-1.5-1.5zM0 1h2.5l1.5 7h11l1.5-7H0zm2.5 8L4 3h11l1.5 6H2.5z"/>
+          <svg aria-hidden="true" focusable="false" role="presentation" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6m0 0h14M7 13v6a2 2 0 002 2h6a2 2 0 002-2v-6"/>
           </svg>
           <span class="visually-hidden">Cart</span>
         </a>
@@ -64,26 +64,21 @@
 
 <style>
   .header {
-    background: #5EC4B0;
+    background: #A8E6CF;
     backdrop-filter: none;
     border-bottom: none;
     padding: 1.5rem 0;
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 100;
+    width: 100%;
+    z-index: 50;
     box-shadow: none;
   }
 
-  @media screen and (min-width: 990px) {
-    .header {
-      padding: 1.25rem 0;
-    }
-  }
-
   .header__container {
-    max-width: var(--page-width);
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 0 var(--page-margin);
+    padding: 0 2rem;
   }
 
   .header__inner {
@@ -107,106 +102,47 @@
 
   .header__logo-image {
     height: auto;
-    max-height: 80px;
+    max-height: 50px;
     width: auto;
-    max-width: 250px;
+    max-width: 180px;
     object-fit: contain;
     display: block;
   }
 
   @media screen and (max-width: 749px) {
     .header__logo-image {
-      max-height: 60px;
-      max-width: 200px;
+      max-height: 40px;
+      max-width: 150px;
     }
   }
 
   .header__logo-text {
-    font-size: 3rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 900;
     font-family: var(--font-primary--family);
     line-height: 1;
     display: flex;
     align-items: baseline;
-  }
-
-  @media screen and (max-width: 749px) {
-    .header__logo-text {
-      font-size: 2.25rem;
-    }
+    color: #FFFFFF;
+    letter-spacing: -0.025em;
   }
 
   .header__logo-text--print {
     color: #FFFFFF;
-    -webkit-text-stroke: 2.5px #111827;
-    text-stroke: 2.5px #111827;
-    paint-order: stroke fill;
-    letter-spacing: -0.02em;
-    position: relative;
   }
 
   .header__logo-text--ora {
     color: #FFFFFF;
-    -webkit-text-stroke: 2.5px #111827;
-    text-stroke: 2.5px #111827;
-    paint-order: stroke fill;
-    letter-spacing: -0.02em;
-    position: relative;
-  }
-
-  /* Fallback for browsers that don't support text-stroke */
-  @supports not (-webkit-text-stroke: 2px #4A4A6A) {
-    .header__logo-text--print {
-      text-shadow: 
-        -2px -2px 0 #4A4A6A,
-        2px -2px 0 #4A4A6A,
-        -2px 2px 0 #4A4A6A,
-        2px 2px 0 #4A4A6A,
-        -2px 0 0 #4A4A6A,
-        2px 0 0 #4A4A6A,
-        0 -2px 0 #4A4A6A,
-        0 2px 0 #4A4A6A,
-        -1px -1px 0 #4A4A6A,
-        1px -1px 0 #4A4A6A,
-        -1px 1px 0 #4A4A6A,
-        1px 1px 0 #4A4A6A;
-    }
-
-    .header__logo-text--ora {
-      text-shadow: 
-        -2px -2px 0 #4A4A6A,
-        2px -2px 0 #4A4A6A,
-        -2px 2px 0 #4A4A6A,
-        2px 2px 0 #4A4A6A,
-        -2px 0 0 #4A4A6A,
-        2px 0 0 #4A4A6A,
-        0 -2px 0 #4A4A6A,
-        0 2px 0 #4A4A6A,
-        -1px -1px 0 #4A4A6A,
-        1px -1px 0 #4A4A6A,
-        -1px 1px 0 #4A4A6A,
-        1px 1px 0 #4A4A6A;
-    }
-  }
-
-  @media screen and (max-width: 749px) {
-    .header__logo-text {
-      font-size: 1.5rem;
-    }
-
-    .header__logo-icon {
-      width: 50px;
-      height: 50px;
-    }
   }
 
   .header__nav {
     display: none;
   }
 
-  @media screen and (min-width: 990px) {
+  @media screen and (min-width: 768px) {
     .header__nav {
-      display: block;
+      display: flex;
+      align-items: center;
     }
   }
 
@@ -215,19 +151,20 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    gap: 2rem;
+    gap: 3rem;
   }
 
   .header__menu-link {
-    color: #FFFFFF;
+    color: #1F2937;
     text-decoration: none;
-    font-weight: 500;
-    font-size: 1.25rem;
+    font-weight: 300;
+    font-size: 1rem;
     transition: opacity 0.3s ease;
+    padding: 0;
   }
 
   .header__menu-link:hover {
-    opacity: 0.8;
+    opacity: 0.7;
   }
 
   .header__actions {
@@ -237,10 +174,11 @@
   }
 
   .header__cart-link {
-    color: #FFFFFF;
     display: flex;
     align-items: center;
-    transition: opacity 0.3s ease;
+    color: #88D4AB;
+    text-decoration: none;
+    padding: 0;
   }
 
   .header__cart-link:hover {
@@ -248,8 +186,9 @@
   }
 
   .header__cart-link svg {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
+    stroke-width: 1.5;
   }
 </style>
 
