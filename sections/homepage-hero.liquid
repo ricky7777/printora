@@ -152,6 +152,12 @@
     position: relative;
     z-index: 3;
   }
+  
+  @media screen and (min-width: 1024px) {
+    .homepage-hero__text {
+      gap: 2rem;
+    }
+  }
 
   .homepage-hero__heading-wrapper {
     display: flex;
@@ -162,20 +168,20 @@
   }
 
   .homepage-hero__heading {
-    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-size: 6rem;
     font-weight: 900;
-    line-height: 1.1;
+    line-height: 1.25;
     margin: 0;
-    color: #1F2937;
-    letter-spacing: -0.02em;
+    color: #374151;
+    letter-spacing: -0.025em;
     font-family: var(--font-primary--family);
     position: relative;
     z-index: 4;
   }
   
-  @media screen and (min-width: 990px) {
+  @media screen and (min-width: 1024px) {
     .homepage-hero__heading {
-      font-size: 4.5rem;
+      font-size: 7.2rem;
     }
   }
 
@@ -237,11 +243,11 @@
   }
 
   .homepage-hero__subheading {
-    font-size: 0.875rem;
+    font-size: 1.4rem;
     font-weight: 300;
     text-transform: uppercase;
     letter-spacing: 0.3em;
-    color: #1F2937;
+    color: #374151;
     margin: 0;
     font-family: var(--font-primary--family);
   }
@@ -253,7 +259,7 @@
   }
 
   .homepage-hero__description {
-    font-size: 1.125rem;
+    font-size: 1.8rem;
     line-height: 1.75;
     color: #374151;
     margin: 0;
@@ -261,6 +267,12 @@
     max-width: 32rem;
     position: relative;
     z-index: 4;
+  }
+  
+  @media screen and (min-width: 1024px) {
+    .homepage-hero__description {
+      max-width: 100%;
+    }
   }
 
   .homepage-hero__description p {
@@ -283,24 +295,23 @@
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 1rem 2rem;
+    padding: 1.6rem 3.2rem;
     font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
     border-radius: 1.5rem;
     transition: all 0.3s ease;
-    background: #FF9DB5;
+    background: #FFB6C1;
     color: #FFFFFF;
     border: none;
     width: fit-content;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
     position: relative;
     z-index: 4;
   }
 
   .homepage-hero__button:hover {
-    background: #FF8AA3;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
   }
 
@@ -369,12 +380,6 @@
       "id": "color_scheme",
       "label": "Color scheme",
       "default": "scheme-1"
-    },
-    {
-      "type": "text",
-      "id": "subheading",
-      "default": "T-Shirt Print",
-      "label": "Subheading"
     },
     {
       "type": "text",

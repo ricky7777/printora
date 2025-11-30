@@ -4,10 +4,9 @@
       "type": "homepage-hero",
       "settings": {
         "color_scheme": "scheme-1",
-        "subheading": "T-Shirt Print",
-        "heading": "Your Design — Your Rules",
-        "text": "<p>Professional printing technology that perfectly brings your creative designs to life. From concept to finished product, we're here to make every idea a reality.</p>",
-        "button_label": "Upload Your Design",
+        "heading": "Your Design</br>Your Rules",
+        "text": "<p>Bring your creative designs to life with professional printing.</p>",
+        "button_label": "Start Designing",
         "button_link": "/collections/all"
       }
     },
