@@ -7,8 +7,14 @@
         <div class="max-w-7xl mx-auto px-8 py-6">
             <div class="flex items-center justify-between">
                 <!-- Logo -->
-                <div class="text-white font-black text-2xl tracking-tight">
-                    PrintOra
+                <div class="header__logo">
+                    {%- assign logo_image_name = 'printora_logo.png' -%}
+                    <img
+                        src="{{ logo_image_name | asset_url }}"
+                        alt="PrintOra"
+                        class="header__logo-image"
+                        loading="eager"
+                    >
                 </div>
                 
                 <!-- Navigation -->
@@ -27,3 +33,25 @@
             </div>
         </div>
     </header>
+
+<style>
+  .header__logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .header__logo-image {
+    max-height: 2.4rem;
+    max-width: 9rem;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+  }
+  
+  @media screen and (max-width: 767px) {
+    .header__logo-image {
+      max-height: 1.8rem;
+      max-width: 7.2rem;
+    }
+  }
+</style>
