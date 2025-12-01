@@ -19,16 +19,21 @@
                 
                 <!-- Navigation -->
                 <nav class="hidden md:flex items-center space-x-12">
-                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Home</a>
-                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Catalog</a>
-                    <a href="#" class="text-white font-light hover:opacity-80 transition-opacity">Contact</a>
+                    <a href="#hero" class="header-nav-link" data-target="hero">Home</a>
+                    <a href="#pricing-cards" class="header-nav-link" data-target="pricing-cards">Pricing</a>
+                    <a href="#features" class="header-nav-link" data-target="features">Why Us</a>
+                    <a href="#contact" class="header-nav-link" data-target="contact">Contact</a>
                 </nav>
                 
                 <!-- Cart Icon -->
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-deep-gray stroke-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6m0 0h14M7 13v6a2 2 0 002 2h6a2 2 0 002-2v-6" />
-                    </svg>
+                <div class="flex items-center header__cart">
+                    {%- assign cart_image_name = 'shopping_car.png' -%}
+                    <img
+                        src="{{ cart_image_name | asset_url }}"
+                        alt="Shopping Cart"
+                        class="header__cart-image"
+                        loading="eager"
+                    >
                 </div>
             </div>
         </div>
@@ -54,4 +59,75 @@
       max-width: 7.2rem;
     }
   }
+  
+  .header-nav-link {
+    color: #1F2937;
+    font-weight: 300;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .header-nav-link:hover {
+    opacity: 0.8;
+  }
+  
+  .header__cart {
+    display: flex;
+    align-items: center;
+  }
+  
+  .header__cart-image {
+    width: 2.4rem;
+    height: 2.4rem;
+    object-fit: contain;
+  }
+  
+  @media screen and (max-width: 767px) {
+    .header__cart-image {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.header-nav-link');
+    
+    navLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('data-target');
+        
+        if (targetId === 'hero') {
+          // Scroll to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (targetId === 'pricing-cards') {
+          // Same behavior as scroll hint button
+          const target = document.getElementById('pricing-cards');
+          if (target) {
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
+            const offset = targetPosition * 0.05;
+            window.scrollTo({ top: targetPosition - offset, behavior: 'smooth' });
+          }
+        } else if (targetId === 'features') {
+          // Scroll to Why Choose PrintOra section
+          const target = document.getElementById('features');
+          if (target) {
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
+            window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+          }
+        } else if (targetId === 'contact') {
+          // Scroll to contact/footer
+          const target = document.getElementById('contact') || document.querySelector('footer');
+          if (target) {
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
+            window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+          }
+        }
+      });
+    });
+  });
+</script>
