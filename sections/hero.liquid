@@ -57,7 +57,7 @@
   </div>
   
   <!-- Curved Bottom -->
-  <div class="absolute bottom-0 left-0 w-full h-32 bg-white hero-curve"></div>
+  <div class="absolute bottom-0 left-0 w-full h-16 hero-curve hero-curve-bg"></div>
 </section>
 
 <style>
@@ -65,6 +65,11 @@
   .hero-section img {
     max-width: 100%;
     height: auto;
+  }
+  
+  /* Hero 底部曲線區塊使用統一的背景色 */
+  .hero-curve-bg {
+    background-color: var(--color-header-hero-bg);
   }
   
   @media screen and (max-width: 1023px) {
