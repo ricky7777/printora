@@ -28,6 +28,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Header 和 Hero 區塊共用背景色 - 在這裡統一修改 */
+            --color-header-hero-bg: #86CFB4;
+        }
+        
         .hero-curve {
             clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
         }
@@ -36,6 +41,16 @@
         }
         .card-shadow {
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* Header 背景色 */
+        header {
+            background-color: var(--color-header-hero-bg) !important;
+        }
+        
+        /* Hero Section 背景色 */
+        .hero-section {
+            background-color: var(--color-header-hero-bg) !important;
         }
     </style>
     <link rel="stylesheet" href="{{ 'original-inline.css' | asset_url }}">
