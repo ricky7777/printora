@@ -365,12 +365,17 @@
           // Scroll to top
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else if (targetId === 'pricing-cards') {
-          // Same behavior as scroll hint button
-          const target = document.getElementById('pricing-cards');
-          if (target) {
-            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
-            const offset = targetPosition * 0.05;
-            window.scrollTo({ top: targetPosition - offset, behavior: 'smooth' });
+          // Use shared scroll method
+          if (typeof scrollToPricing === 'function') {
+            scrollToPricing(e);
+          } else {
+            // Fallback if function not loaded yet
+            const target = document.getElementById('pricing-cards');
+            if (target) {
+              const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
+              const offset = targetPosition * 0.05;
+              window.scrollTo({ top: targetPosition - offset, behavior: 'smooth' });
+            }
           }
         } else if (targetId === 'features') {
           // Scroll to Why Choose PrintOra section
