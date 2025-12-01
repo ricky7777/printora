@@ -1,0 +1,247 @@
+<!-- Pricing Cards Section -->
+<section class="pricing-cards-section bg-gradient-to-r from-blue-100 via-white to-pink-100 py-20">
+  <div class="max-w-7xl mx-auto px-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Card 1: Small Logo -->
+      <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden relative">
+        <div class="pricing-card__image-container bg-white p-8 flex items-center justify-center">
+          {%- comment -%} 將圖片放到 assets/ 目錄，檔名改為 card1-small-logo.png {%- endcomment -%}
+          {%- assign card1_image_name = 'card1-small-logo.jpg' -%}
+          <div class="relative w-full">
+            <img
+              src="{{ card1_image_name | asset_url }}"
+              alt="Small Logo T-Shirt"
+              class="w-full h-auto object-contain rounded-2xl"
+              loading="lazy"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center" style="display:none;">
+              <span class="text-gray-400">Small Logo Image</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pricing-card__content p-6">
+          <div class="pricing-card__badge pricing-card__badge--green mb-4">
+            Small Logo
+          </div>
+          
+          <p class="pricing-card__description text-black mb-6">
+            Perfect for chest logos and small designs
+          </p>
+          
+          <div class="pricing-card__price pricing-card__price--orange mb-6">
+            $32
+          </div>
+          
+          <a href="/collections/all" class="pricing-card__button pricing-card__button--red block text-center">
+            Start Designing
+          </a>
+        </div>
+      </div>
+      
+      <!-- Card 2: Standard Print (Most Popular) -->
+      <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden relative">
+        <!-- Most Popular Banner -->
+        <div class="pricing-card__popular-banner">
+          Most Popular
+        </div>
+        
+        <div class="pricing-card__image-container bg-white p-8 flex items-center justify-center">
+          {%- comment -%} 將圖片放到 assets/ 目錄，檔名改為 card2-standard-print.png {%- endcomment -%}
+          {%- assign card2_image_name = 'card2-standard-print.jpg' -%}
+          <div class="relative w-full">
+            <img
+              src="{{ card2_image_name | asset_url }}"
+              alt="Standard Print T-Shirt"
+              class="w-full h-auto object-contain rounded-2xl"
+              loading="lazy"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center" style="display:none;">
+              <span class="text-gray-400">Standard Print Image</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pricing-card__content p-6">
+          <div class="pricing-card__badge pricing-card__badge--pink mb-4">
+            Standard Print
+          </div>
+          
+          <p class="pricing-card__description text-black mb-6">
+            Ideal for most designs and graphics
+          </p>
+          
+          <div class="pricing-card__price pricing-card__price--yellow mb-6">
+            $35
+          </div>
+          
+          <a href="/collections/all" class="pricing-card__button pricing-card__button--red block text-center">
+            Start Designing
+          </a>
+        </div>
+      </div>
+      
+      <!-- Card 3: Large Print -->
+      <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden relative">
+        <div class="pricing-card__image-container bg-white p-8 flex items-center justify-center">
+          {%- comment -%} 將圖片放到 assets/ 目錄，檔名改為 card3-large-print.png {%- endcomment -%}
+          {%- assign card3_image_name = 'card3-large-print.jpg' -%}
+          <div class="relative w-full">
+            <img
+              src="{{ card3_image_name | asset_url }}"
+              alt="Large Print T-Shirt"
+              class="w-full h-auto object-contain rounded-2xl"
+              loading="lazy"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center" style="display:none;">
+              <span class="text-gray-400">Large Print Image</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pricing-card__content p-6">
+          <div class="pricing-card__badge pricing-card__badge--green mb-4">
+            Large Print
+          </div>
+          
+          <p class="pricing-card__description text-black mb-6">
+            Maximum impact for bold designs
+          </p>
+          
+          <div class="pricing-card__price pricing-card__price--orange mb-6">
+            $45
+          </div>
+          
+          <a href="/collections/all" class="pricing-card__button pricing-card__button--red block text-center">
+            Start Designing
+          </a>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<style>
+  .pricing-cards-section {
+    background: linear-gradient(to right, #E0F2FE 0%, #FFFFFF 50%, #FCE7F3 100%);
+    padding: 5rem 0;
+  }
+  
+  .pricing-card {
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  }
+  
+  .pricing-card__popular-banner {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #374151;
+    color: #FFFFFF;
+    padding: 0.5rem 1.5rem;
+    border-radius: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  
+  .pricing-card__image-container {
+    min-height: 300px;
+    background-color: #FFFFFF;
+  }
+  
+  .pricing-card__content {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .pricing-card__badge {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 1rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #1F2937;
+    width: fit-content;
+  }
+  
+  .pricing-card__badge--green {
+    background-color: #D1FAE5;
+  }
+  
+  .pricing-card__badge--pink {
+    background-color: #FCE7F3;
+  }
+  
+  .pricing-card__description {
+    font-size: 1.6rem;
+    line-height: 1.6;
+    color: #1F2937;
+  }
+  
+  .pricing-card__price {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 1rem;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #1F2937;
+    width: fit-content;
+  }
+  
+  .pricing-card__price--orange {
+    background-color: #FED7AA;
+  }
+  
+  .pricing-card__price--yellow {
+    background-color: #FEF3C7;
+  }
+  
+  .pricing-card__button {
+    padding: 1.2rem 2rem;
+    border-radius: 1rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+  
+  .pricing-card__button--red {
+    background-color: #EF4444;
+    color: #FFFFFF;
+  }
+  
+  .pricing-card__button--red:hover {
+    background-color: #DC2626;
+    transform: scale(1.02);
+  }
+  
+  @media screen and (max-width: 767px) {
+    .pricing-cards-section {
+      padding: 3rem 0;
+    }
+    
+    .pricing-card {
+      margin-bottom: 2rem;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Pricing Cards"
+}
+{% endschema %}
+
