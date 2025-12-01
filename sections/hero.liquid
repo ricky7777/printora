@@ -58,6 +58,15 @@
   
   <!-- Curved Bottom -->
   <div class="absolute bottom-0 left-0 w-full h-16 hero-curve hero-curve-bg"></div>
+  
+  <!-- Scroll Down Hint -->
+  <a href="#pricing-cards" class="hero-scroll-hint" onclick="event.preventDefault(); const target = document.getElementById('pricing-cards'); const targetPosition = target.getBoundingClientRect().top + window.pageYOffset; const offset = targetPosition * 0.05; window.scrollTo({ top: targetPosition - offset, behavior: 'smooth' });">
+    <div class="hero-scroll-hint__icon">
+      <svg class="hero-scroll-hint__arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+    </div>
+  </a>
 </section>
 
 <style>
@@ -72,9 +81,83 @@
     background-color: var(--color-header-hero-bg);
   }
   
+  /* Scroll Down Hint - 動態提示 */
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+  
+  .hero-scroll-hint__icon {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: bounce-hint 2s infinite;
+  }
+  
+  .hero-scroll-hint__icon:hover {
+    background-color: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .hero-scroll-hint__icon:active {
+    transform: scale(0.95);
+  }
+  
+  .hero-scroll-hint__arrow {
+    width: 24px;
+    height: 24px;
+    color: #374151;
+    /* 箭頭不動 */
+    position: relative;
+  }
+  
+  /* 只有外框動，箭頭不動 */
+  @keyframes bounce-hint {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  /* 只有 icon 動，箭頭保持不動 */
+  .hero-scroll-hint__icon {
+    animation: bounce-hint 2s infinite;
+  }
+  
   @media screen and (max-width: 1023px) {
     .hero-section .grid > div:last-child {
       display: none;
+    }
+    
+    .hero-scroll-hint {
+      bottom: 1rem;
+    }
+    
+    .hero-scroll-hint__icon {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .hero-scroll-hint__arrow {
+      width: 20px;
+      height: 20px;
     }
   }
 </style>

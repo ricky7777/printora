@@ -1,5 +1,5 @@
 <!-- Pricing Cards Section -->
-<section class="pricing-cards-section bg-gradient-to-r from-blue-100 via-white to-pink-100 py-20">
+<section id="pricing-cards" class="pricing-cards-section bg-gradient-to-r from-blue-100 via-white to-pink-100 py-20">
   <div class="max-w-7xl mx-auto px-8">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       
@@ -165,6 +165,17 @@
   .pricing-card__content {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  
+  .pricing-card {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .pricing-card__button {
+    margin-top: auto;
   }
   
   .pricing-card__badge {
