@@ -39,6 +39,67 @@
         </div>
     </header>
 
+<!-- Contact Modal -->
+<div id="contact-modal" class="contact-modal" style="display: none;">
+  <div class="contact-modal__overlay"></div>
+  <div class="contact-modal__content">
+    <button class="contact-modal__close" id="contact-modal-close">&times;</button>
+    
+    <h2 class="contact-modal__title">We'd love to hear from you.<br/>We'll get back to you as soon as possible.</h2>
+    
+    <form id="contact-form" class="contact-form">
+      <div class="contact-form__group">
+        <label for="contact-email" class="contact-form__label">
+          Email <span class="contact-form__required">*</span>
+        </label>
+        <input 
+          type="email" 
+          id="contact-email" 
+          name="email" 
+          class="contact-form__input" 
+          required
+          placeholder="your.email@example.com"
+        >
+      </div>
+      
+      <div class="contact-form__group">
+        <label for="contact-phone" class="contact-form__label">
+          Phone Number
+        </label>
+        <input 
+          type="tel" 
+          id="contact-phone" 
+          name="phone" 
+          class="contact-form__input" 
+          placeholder="+64 21 123 4567"
+        >
+      </div>
+      
+      <div class="contact-form__group">
+        <label for="contact-message" class="contact-form__label">
+          Message <span class="contact-form__required">*</span>
+        </label>
+        <textarea 
+          id="contact-message" 
+          name="message" 
+          class="contact-form__textarea" 
+          rows="5"
+          required
+          placeholder="Please enter your message here..."
+        ></textarea>
+      </div>
+      
+      <button type="submit" class="contact-form__submit">
+        Send Message
+      </button>
+    </form>
+    
+    <div id="contact-form-success" class="contact-form__success" style="display: none;">
+      <p>Thank you! Your message has been sent successfully. We'll get back to you soon.</p>
+    </div>
+  </div>
+</div>
+
 <style>
   .header__logo {
     display: flex;
@@ -90,6 +151,205 @@
       height: 2rem;
     }
   }
+  
+  /* Contact Modal Styles */
+  .contact-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .contact-modal__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+  
+  .contact-modal__content {
+    position: relative;
+    background-color: #FFFFFF;
+    border-radius: 1.2rem;
+    padding: 2.5rem;
+    max-width: 676px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+  }
+  
+  .contact-modal__close {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    background: none;
+    border: none;
+    font-size: 2.4rem;
+    color: #6B7280;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+  }
+  
+  .contact-modal__close:hover {
+    color: #1F2937;
+  }
+  
+  .contact-modal__title {
+    font-size: 1.28rem;
+    font-weight: 500;
+    color: #1F2937;
+    margin: 0 0 2rem 0;
+    line-height: 1.5;
+    padding-right: 2.5rem;
+    letter-spacing: -0.01em;
+  }
+  
+  .contact-form__group {
+    margin-bottom: 1.6rem;
+  }
+  
+  .contact-form__label {
+    display: block;
+    font-size: 0.96rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  
+  .contact-form__required {
+    color: #EF4444;
+    font-weight: 600;
+  }
+  
+  .contact-form__input,
+  .contact-form__textarea {
+    width: 100%;
+    padding: 1rem 1.2rem;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 0.6rem;
+    font-size: 0.96rem;
+    font-family: inherit;
+    color: #1F2937;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+    background-color: #FAFAFA;
+  }
+  
+  .contact-form__input:focus,
+  .contact-form__textarea:focus {
+    outline: none;
+    border-color: #88D4AB;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(136, 212, 171, 0.1);
+  }
+  
+  .contact-form__textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+  
+  .contact-form__submit {
+    width: 100%;
+    padding: 1.1rem 1.8rem;
+    background-color: #88D4AB;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 0.8rem;
+    font-size: 1.12rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    margin-top: 0.8rem;
+    letter-spacing: 0.01em;
+  }
+  
+  .contact-form__submit:hover {
+    background-color: #5EC4B0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(136, 212, 171, 0.3);
+  }
+  
+  .contact-form__submit:active {
+    transform: translateY(0);
+  }
+  
+  .contact-form__success {
+    background-color: #D1FAE5;
+    border: 1.5px solid #88D4AB;
+    border-radius: 0.6rem;
+    padding: 1.2rem;
+    margin-top: 1.6rem;
+    text-align: center;
+  }
+  
+  .contact-form__success p {
+    color: #065F46;
+    font-size: 0.96rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+  
+  @media screen and (max-width: 767px) {
+    .contact-modal__content {
+      padding: 2rem 1.5rem;
+      max-height: 95vh;
+      border-radius: 1rem;
+    }
+    
+    .contact-modal__title {
+      font-size: 1.12rem;
+      margin-bottom: 1.6rem;
+      padding-right: 2rem;
+    }
+    
+    .contact-modal__close {
+      top: 1rem;
+      right: 1rem;
+      font-size: 2.2rem;
+      width: 2.2rem;
+      height: 2.2rem;
+    }
+    
+    .contact-form__group {
+      margin-bottom: 1.4rem;
+    }
+    
+    .contact-form__label {
+      font-size: 0.88rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .contact-form__input,
+    .contact-form__textarea {
+      font-size: 0.88rem;
+      padding: 0.9rem 1rem;
+    }
+    
+    .contact-form__submit {
+      font-size: 1.04rem;
+      padding: 1rem 1.6rem;
+    }
+  }
 </style>
 
 <script>
@@ -120,14 +380,81 @@
             window.scrollTo({ top: targetPosition, behavior: 'smooth' });
           }
         } else if (targetId === 'contact') {
-          // Scroll to contact/footer
-          const target = document.getElementById('contact') || document.querySelector('footer');
-          if (target) {
-            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
-            window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+          // Open contact dialog
+          e.preventDefault();
+          const contactModal = document.getElementById('contact-modal');
+          if (contactModal) {
+            contactModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
           }
         }
       });
     });
+    
+    // Contact Modal functionality
+    const contactModal = document.getElementById('contact-modal');
+    const contactModalClose = document.getElementById('contact-modal-close');
+    const contactForm = document.getElementById('contact-form');
+    const contactFormSuccess = document.getElementById('contact-form-success');
+    
+    // Close modal when clicking overlay
+    if (contactModal) {
+      contactModal.addEventListener('click', function(e) {
+        if (e.target === contactModal || e.target.classList.contains('contact-modal__overlay')) {
+          contactModal.style.display = 'none';
+          document.body.style.overflow = '';
+        }
+      });
+    }
+    
+    // Close modal button
+    if (contactModalClose) {
+      contactModalClose.addEventListener('click', function() {
+        contactModal.style.display = 'none';
+        document.body.style.overflow = '';
+      });
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && contactModal && contactModal.style.display === 'flex') {
+        contactModal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+    
+    // Handle form submission
+    if (contactForm) {
+      contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('contact-email').value;
+        const phone = document.getElementById('contact-phone').value;
+        const message = document.getElementById('contact-message').value;
+        
+        // Prepare email content
+        const subject = 'Contact Form Submission from PrintOra Website';
+        const body = `Email: ${email}\nPhone: ${phone || 'Not provided'}\n\nMessage:\n${message}`;
+        
+        // Create mailto link
+        const mailtoLink = `mailto:risk0917@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        
+        // Open email client
+        window.location.href = mailtoLink;
+        
+        // Show success message
+        contactForm.style.display = 'none';
+        contactFormSuccess.style.display = 'block';
+        
+        // Reset form after 3 seconds and close modal
+        setTimeout(function() {
+          contactForm.reset();
+          contactForm.style.display = 'block';
+          contactFormSuccess.style.display = 'none';
+          contactModal.style.display = 'none';
+          document.body.style.overflow = '';
+        }, 3000);
+      });
+    }
   });
 </script>
