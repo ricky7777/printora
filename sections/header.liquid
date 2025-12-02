@@ -49,30 +49,46 @@
     
     <form id="contact-form" class="contact-form">
       <div class="contact-form__group">
-        <label for="contact-email" class="contact-form__label">
-          Email <span class="contact-form__required">*</span>
+        <label for="contact-name" class="contact-form__label">
+          Name <span class="contact-form__required">*</span>
         </label>
         <input 
-          type="email" 
-          id="contact-email" 
-          name="email" 
+          type="text" 
+          id="contact-name" 
+          name="name" 
           class="contact-form__input" 
           required
-          placeholder="your.email@example.com"
+          placeholder="Your Name"
         >
       </div>
       
-      <div class="contact-form__group">
-        <label for="contact-phone" class="contact-form__label">
-          Phone Number
-        </label>
-        <input 
-          type="tel" 
-          id="contact-phone" 
-          name="phone" 
-          class="contact-form__input" 
-          placeholder="+64 21 123 4567"
-        >
+      <div class="contact-form__row">
+        <div class="contact-form__group contact-form__group--half">
+          <label for="contact-email" class="contact-form__label">
+            Email <span class="contact-form__required">*</span>
+          </label>
+          <input 
+            type="email" 
+            id="contact-email" 
+            name="email" 
+            class="contact-form__input" 
+            required
+            placeholder="your.email@example.com"
+          >
+        </div>
+        
+        <div class="contact-form__group contact-form__group--half">
+          <label for="contact-phone" class="contact-form__label">
+            Phone Number
+          </label>
+          <input 
+            type="tel" 
+            id="contact-phone" 
+            name="phone" 
+            class="contact-form__input" 
+            placeholder="+64 21 123 4567"
+          >
+        </div>
       </div>
       
       <div class="contact-form__group">
@@ -222,8 +238,19 @@
     letter-spacing: -0.01em;
   }
   
+  .contact-form__row {
+    display: flex;
+    gap: 1.2rem;
+    margin-bottom: 1.6rem;
+  }
+  
   .contact-form__group {
     margin-bottom: 1.6rem;
+  }
+  
+  .contact-form__group--half {
+    flex: 1;
+    margin-bottom: 0;
   }
   
   .contact-form__label {
@@ -330,7 +357,17 @@
       height: 2.2rem;
     }
     
+    .contact-form__row {
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 1.4rem;
+    }
+    
     .contact-form__group {
+      margin-bottom: 1.4rem;
+    }
+    
+    .contact-form__group--half {
       margin-bottom: 1.4rem;
     }
     
@@ -433,32 +470,57 @@
       contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        // Get form values
+        const name = document.getElementById('contact-name').value;
         const email = document.getElementById('contact-email').value;
         const phone = document.getElementById('contact-phone').value;
         const message = document.getElementById('contact-message').value;
         
-        // Prepare email content
-        const subject = 'Contact Form Submission from PrintOra Website';
-        const body = `Email: ${email}\nPhone: ${phone || 'Not provided'}\n\nMessage:\n${message}`;
+        // Disable submit button to prevent double submission
+        const submitButton = contactForm.querySelector('.contact-form__submit');
+        const originalButtonText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
         
-        // Create mailto link
-        const mailtoLink = `mailto:risk0917@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        
-        // Open email client
-        window.location.href = mailtoLink;
-        
-        // Show success message
-        contactForm.style.display = 'none';
-        contactFormSuccess.style.display = 'block';
-        
-        // Reset form after 3 seconds and close modal
-        setTimeout(function() {
-          contactForm.reset();
-          contactForm.style.display = 'block';
-          contactFormSuccess.style.display = 'none';
-          contactModal.style.display = 'none';
-          document.body.style.overflow = '';
-        }, 3000);
+        try {
+          // Send POST request to send-email endpoint
+          const response = await fetch("/apps/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: name,
+              email: email,
+              phone: phone || '',
+              message: message
+            })
+          });
+          
+          if (response.ok) {
+            // Show success message
+            contactForm.style.display = 'none';
+            contactFormSuccess.style.display = 'block';
+            
+            // Reset form after 3 seconds and close modal
+            setTimeout(function() {
+              contactForm.reset();
+              contactForm.style.display = 'block';
+              contactFormSuccess.style.display = 'none';
+              contactModal.style.display = 'none';
+              document.body.style.overflow = '';
+              submitButton.disabled = false;
+              submitButton.textContent = originalButtonText;
+            }, 3000);
+          } else {
+            // Handle error
+            throw new Error('Failed to send email');
+          }
+        } catch (error) {
+          // Show error message
+          console.error('Error sending email:', error);
+          alert('Failed to send message. Please try again later.');
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+        }
       });
     }
   });
