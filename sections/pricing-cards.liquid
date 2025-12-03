@@ -5,6 +5,12 @@
       
       <!-- Card 1: Small Logo -->
       <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden relative">
+        <!-- Price in top left corner -->
+        <div class="pricing-card__price-top">
+          <span class="pricing-card__price-old">$45</span>
+          <span class="pricing-card__price-new">$32</span>
+        </div>
+        
         <div class="pricing-card__image-container bg-white p-8 flex items-center justify-center">
           {%- comment -%} 將圖片放到 assets/ 目錄，檔名改為 card1-small-logo.png {%- endcomment -%}
           {%- assign card1_image_name = 'card1-small-logo.jpg' -%}
@@ -31,10 +37,6 @@
             Perfect for chest logos and small designs
           </p>
           
-          <div class="pricing-card__price pricing-card__price--orange mb-6">
-            $32
-          </div>
-          
           <a href="/collections/all" class="pricing-card__button pricing-card__button--red block text-center">
             Start Designing
           </a>
@@ -46,6 +48,12 @@
         <!-- Most Popular Banner -->
         <div class="pricing-card__popular-banner">
           Most Popular
+        </div>
+        
+        <!-- Price in top left corner -->
+        <div class="pricing-card__price-top">
+          <span class="pricing-card__price-old">$45</span>
+          <span class="pricing-card__price-new">$35</span>
         </div>
         
         <div class="pricing-card__image-container bg-white p-8 flex items-center justify-center">
@@ -74,10 +82,6 @@
             Ideal for most designs and graphics
           </p>
           
-          <div class="pricing-card__price pricing-card__price--yellow mb-6">
-            $35
-          </div>
-          
           <a href="/collections/all" class="pricing-card__button pricing-card__button--red block text-center">
             Start Designing
           </a>
@@ -86,6 +90,12 @@
       
       <!-- Card 3: Large Print -->
       <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden relative">
+        <!-- Price in top left corner -->
+        <div class="pricing-card__price-top">
+          <span class="pricing-card__price-old">$55</span>
+          <span class="pricing-card__price-new">$45</span>
+        </div>
+        
         <div class="pricing-card__image-container bg-white p-8 flex items-center justify-center">
           {%- comment -%} 將圖片放到 assets/ 目錄，檔名改為 card3-large-print.png {%- endcomment -%}
           {%- assign card3_image_name = 'card3-large-print.jpg' -%}
@@ -111,10 +121,6 @@
           <p class="pricing-card__description text-black mb-6">
             Maximum impact for bold designs
           </p>
-          
-          <div class="pricing-card__price pricing-card__price--orange mb-6">
-            $45
-          </div>
           
           <a href="/collections/all" class="pricing-card__button pricing-card__button--red block text-center">
             Start Designing
@@ -155,6 +161,29 @@
     font-weight: 600;
     z-index: 10;
     white-space: nowrap;
+  }
+  
+  .pricing-card__price-top {
+    position: absolute;
+    top: 1.2rem;
+    left: 1.2rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  
+  .pricing-card__price-old {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #6B7280;
+    text-decoration: line-through;
+  }
+  
+  .pricing-card__price-new {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #F97316;
   }
   
   .pricing-card__image-container {
@@ -202,23 +231,6 @@
     color: #1F2937;
   }
   
-  .pricing-card__price {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    border-radius: 1rem;
-    font-size: 2.4rem;
-    font-weight: 700;
-    color: #1F2937;
-    width: fit-content;
-  }
-  
-  .pricing-card__price--orange {
-    background-color: #FED7AA;
-  }
-  
-  .pricing-card__price--yellow {
-    background-color: #FEF3C7;
-  }
   
   .pricing-card__button {
     padding: 1.2rem 2rem;
