@@ -83309,7 +83309,7 @@ s.I$=0
 this.aL()},
 abU(){$.Y.k4$.push(new A.aoI(this))},
 N(a){var s=null
-return A.ayv(A.avv(s,s,s,A.awY("printora_logo.png",new A.aoV(),B.fe,40)),new A.x8(new A.aoW(this),s,s,t.yN))},
+return A.ayv(A.avv(s,s,s,A.awY("assets/printora_logo.png",new A.aoV(),B.fe,40)),new A.x8(new A.aoW(this),s,s,t.yN))},
 KK(a,b,c){var s,r=null,q=b==="black",p=q?B.l:B.k
 if(c)q=B.X
 else q=q?B.m3:B.bE
@@ -83572,7 +83572,7 @@ $0(){return A.oX(this.a,!1).dX()},
 $S:0}
 A.aoL.prototype={
 $1(a){var s=null,r=A.d0(16),q=t.E
-return A.awb(s,B.A,A.pL(B.cq,A.c([A.fh(A.rg(A.c([new A.cp(B.fI,A.jw(A.c([B.Tq,A.a3O(s,s,B.EK,s,s,new A.aoJ(a),s,s,s)],q),B.ar,B.eH,B.b8,0),s),new A.oa(1,B.jG,new A.cp(B.mI,A.awY("size_chart.png",new A.aoK(),B.fe,s),s),s),B.yv],q),B.ar,B.an,B.cJ),B.w,B.Ai,new A.cO(B.k,s,s,r,s,s,B.ai),s,s,s,s)],q),B.U,B.cQ),s,s,s,B.j4,B.MA,s,s,s)},
+return A.awb(s,B.A,A.pL(B.cq,A.c([A.fh(A.rg(A.c([new A.cp(B.fI,A.jw(A.c([B.Tq,A.a3O(s,s,B.EK,s,s,new A.aoJ(a),s,s,s)],q),B.ar,B.eH,B.b8,0),s),new A.oa(1,B.jG,new A.cp(B.mI,A.awY("assets/size_chart.png",new A.aoK(),B.fe,s),s),s),B.yv],q),B.ar,B.an,B.cJ),B.w,B.Ai,new A.cO(B.k,s,s,r,s,s,B.ai),s,s,s,s)],q),B.U,B.cQ),s,s,s,B.j4,B.MA,s,s,s)},
 $S:547}
 A.aoJ.prototype={
 $0(){return A.oX(this.a,!1).dX()},
