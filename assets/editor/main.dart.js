@@ -83309,7 +83309,7 @@ s.I$=0
 this.aL()},
 abU(){$.Y.k4$.push(new A.aoI(this))},
 N(a){var s=null
-return A.ayv(A.avv(s,s,s,A.awY("assets/printora_logo.png",new A.aoV(),B.fe,40)),new A.x8(new A.aoW(this),s,s,t.yN))},
+return A.ayv(A.avv(s,s,s,A.awY("printora_logo.png",new A.aoV(),B.fe,40)),new A.x8(new A.aoW(this),s,s,t.yN))},
 KK(a,b,c){var s,r=null,q=b==="black",p=q?B.l:B.k
 if(c)q=B.X
 else q=q?B.m3:B.bE
