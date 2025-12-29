@@ -6,3 +6,8 @@ node_modules/
 .git/
 .gitignore
 
+# Exclude compiled Flutter files that may contain API keys
+# Note: These files are needed for the app to work, but should be regenerated
+# from source files that use environment variables
+assets/editor/main.dart.js
+
