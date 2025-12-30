@@ -1,0 +1,71 @@
+{% layout none %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  {%- comment -%}
+    Flutter Web App Editor Page
+    This page loads the Flutter Web application from assets/editor/
+    
+    IMPORTANT: Shopify assets directory is FLAT - no subdirectories allowed!
+    However, we can still reference files using the full path in asset_url.
+    The base href will be calculated from the asset URL.
+  {%- endcomment -%}
+  
+  {%- comment -%}
+    Calculate base href for Flutter app
+    Extract the base path from a sample asset URL
+    Note: Shopify asset_url can handle subdirectory paths like 'editor/flutter_bootstrap.js'
+  {%- endcomment -%}
+  {%- assign sample_asset = 'editor/flutter_bootstrap.js' | asset_url -%}
+  {%- comment -%} Remove query parameters first {%- endcomment -%}
+  {%- assign sample_clean = sample_asset | split: '?' | first -%}
+  {%- assign editor_base = sample_clean | split: 'flutter_bootstrap.js' | first -%}
+  <base href="{{ editor_base }}">
+  
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="PrintOra T-Shirt Editor">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="PrintOra Editor">
+  <link rel="apple-touch-icon" href="{{ 'editor/icons/Icon-192.png' | asset_url }}">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ 'editor/favicon.png' | asset_url }}"/>
+
+  <title>PrintOra T-Shirt Editor</title>
+  <link rel="manifest" href="{{ 'editor/manifest.json' | asset_url }}">
+  
+  <script>
+    // Preserve URL parameters for Flutter app
+    (function() {
+      // Get current URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const price = urlParams.get('price');
+      const type = urlParams.get('type');
+      
+      // Store in sessionStorage for Flutter app to access
+      if (price) {
+        sessionStorage.setItem('editor_price', price);
+      }
+      if (type) {
+        sessionStorage.setItem('editor_type', type);
+      }
+      
+      // Debug: Log base href
+      const baseElement = document.querySelector('base');
+      if (baseElement) {
+        console.log('Flutter base href:', baseElement.href);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <script src="{{ 'editor/flutter_bootstrap.js' | asset_url }}" async></script>
+</body>
+</html>
+
