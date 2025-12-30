@@ -28,6 +28,34 @@
 
   <title>PrintOra T-Shirt Editor</title>
   <link rel="manifest" href="{{ 'editor/manifest.json' | asset_url }}">
+  
+  {%- comment -%}
+    Get URL parameters from query string
+    Shopify provides request.query_string which contains the full query string
+  {%- endcomment -%}
+  {%- assign query_string = request.query_string -%}
+  
+  <script>
+    // Preserve URL parameters for Flutter app
+    // Flutter app will read these from window.location.search
+    (function() {
+      // Get current URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const price = urlParams.get('price');
+      const type = urlParams.get('type');
+      
+      // Store in sessionStorage for Flutter app to access
+      if (price) {
+        sessionStorage.setItem('editor_price', price);
+      }
+      if (type) {
+        sessionStorage.setItem('editor_type', type);
+      }
+      
+      // Also update the base href to include query parameters if needed
+      // The Flutter app should read from window.location.search
+    })();
+  </script>
 </head>
 <body>
   <script src="{{ 'editor/flutter_bootstrap.js' | asset_url }}" async></script>
