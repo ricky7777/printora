@@ -262,6 +262,40 @@
   }
 </style>
 
+<script>
+  // Handle local development vs production URLs for editor links
+  (function() {
+    function updateEditorLinks() {
+      const isLocalDev = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+      
+      if (isLocalDev) {
+        // In local dev, use .html file
+        const editorLinks = document.querySelectorAll('a[href*="/pages/editor"]');
+        editorLinks.forEach(function(link) {
+          const originalHref = link.getAttribute('href');
+          if (originalHref && originalHref.includes('/pages/editor') && !originalHref.includes('.html')) {
+            // Replace /pages/editor with /pages/editor.html
+            link.setAttribute('href', originalHref.replace('/pages/editor', '/pages/editor.html'));
+            // Removed console.log to reduce console noise
+          }
+        });
+      }
+    }
+    
+    // Run immediately
+    updateEditorLinks();
+    
+    // Also run when DOM is ready (in case script runs before elements are loaded)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateEditorLinks);
+    } else {
+      // DOM already loaded, run immediately
+      updateEditorLinks();
+    }
+  })();
+</script>
+
 {% schema %}
 {
   "name": "Pricing Cards"

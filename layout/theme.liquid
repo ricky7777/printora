@@ -54,6 +54,109 @@
         }
     </style>
     <link rel="stylesheet" href="{{ 'original-inline.css' | asset_url }}">
+    
+    <script>
+      // Prevent CORS and CSP errors at the source in local development
+      (function() {
+        const isLocalDev = window.location.hostname === 'localhost' || 
+                          window.location.hostname === '127.0.0.1';
+        
+        if (isLocalDev) {
+          // Prevent analytics requests before they are sent
+          const originalFetch = window.fetch;
+          window.fetch = function(...args) {
+            const url = args[0];
+            if (typeof url === 'string' && url.includes('/api/collect')) {
+              // Return a successful but empty response to prevent CORS errors
+              return Promise.resolve(new Response(null, { status: 200, statusText: 'OK' }));
+            }
+            return originalFetch.apply(this, args);
+          };
+          
+          // Prevent XMLHttpRequest to /api/collect
+          const originalXHROpen = XMLHttpRequest.prototype.open;
+          XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+            if (typeof url === 'string' && url.includes('/api/collect')) {
+              // Prevent the request
+              this._prevented = true;
+              return;
+            }
+            return originalXHROpen.apply(this, [method, url, ...rest]);
+          };
+          
+          const originalXHRSend = XMLHttpRequest.prototype.send;
+          XMLHttpRequest.prototype.send = function(...args) {
+            if (this._prevented) {
+              // Silently prevent the request
+              return;
+            }
+            return originalXHRSend.apply(this, args);
+          };
+          
+          // Prevent sendBeacon to /api/collect
+          const originalSendBeacon = navigator.sendBeacon;
+          if (originalSendBeacon) {
+            navigator.sendBeacon = function(url, ...rest) {
+              if (typeof url === 'string' && url.includes('/api/collect')) {
+                // Return true to indicate "success" but don't actually send
+                return true;
+              }
+              return originalSendBeacon.apply(navigator, [url, ...rest]);
+            };
+          }
+          
+          // Prevent iframe creation for shop.app
+          const originalCreateElement = document.createElement;
+          document.createElement = function(tagName, ...rest) {
+            const element = originalCreateElement.apply(document, [tagName, ...rest]);
+            
+            if (tagName.toLowerCase() === 'iframe') {
+              // Intercept src attribute setting
+              const originalSetAttribute = element.setAttribute;
+              element.setAttribute = function(name, value) {
+                if (name === 'src' && typeof value === 'string' && value.includes('shop.app')) {
+                  // Prevent setting src to shop.app
+                  return;
+                }
+                return originalSetAttribute.apply(this, [name, value]);
+              };
+              
+              // Also intercept direct property assignment
+              Object.defineProperty(element, 'src', {
+                set: function(value) {
+                  if (typeof value === 'string' && value.includes('shop.app')) {
+                    // Prevent setting src to shop.app
+                    return;
+                  }
+                  Object.defineProperty(this, 'src', {
+                    value: value,
+                    writable: true,
+                    configurable: true
+                  });
+                },
+                get: function() {
+                  return this.getAttribute('src') || '';
+                },
+                configurable: true
+              });
+            }
+            
+            return element;
+          };
+          
+          // Suppress console warnings for known issues
+          const originalWarn = console.warn;
+          console.warn = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('cdn.tailwindcss.com should not be used in production')) {
+              return; // Suppress Tailwind warning
+            }
+            originalWarn.apply(console, args);
+          };
+        }
+      })();
+    </script>
+    
     {% comment %} Shopify content_for_header will be injected here {% endcomment %}
     {% if content_for_header %}{{ content_for_header }}{% endif %}
   </head>
