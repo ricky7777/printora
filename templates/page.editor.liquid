@@ -1,0 +1,35 @@
+{% layout none %}
+
+<!-- Flutter Editor Page -->
+<!-- This page loads the Flutter Web app from assets/editor/ -->
+<!DOCTYPE html>
+<html>
+<head>
+  {%- comment -%}
+    Get the base URL for editor assets
+    Shopify asset URLs are like: https://cdn.shopify.com/s/files/1/xxxxx/editor/
+  {%- endcomment -%}
+  {%- assign editor_base = 'editor/index.html' | asset_url | split: 'index.html' | first -%}
+  <base href="{{ editor_base }}">
+  
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="PrintOra T-Shirt Editor">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="PrintOra Editor">
+  <link rel="apple-touch-icon" href="{{ 'editor/icons/Icon-192.png' | asset_url }}">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ 'editor/favicon.png' | asset_url }}"/>
+
+  <title>PrintOra T-Shirt Editor</title>
+  <link rel="manifest" href="{{ 'editor/manifest.json' | asset_url }}">
+</head>
+<body>
+  <script src="{{ 'editor/flutter_bootstrap.js' | asset_url }}" async></script>
+</body>
+</html>
