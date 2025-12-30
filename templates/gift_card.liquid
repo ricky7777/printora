@@ -1,0 +1,82 @@
+{% layout none %}
+
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ gift_card.balance | money }} Gift Card for {{ shop.name }}</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        text-align: center;
+        padding: 40px 20px;
+        background-color: #f5f5f5;
+      }
+      .gift-card {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      h1 {
+        font-size: 32px;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      .balance {
+        font-size: 48px;
+        font-weight: bold;
+        color: #2c5aa0;
+        margin: 20px 0;
+      }
+      .code {
+        font-size: 24px;
+        font-family: monospace;
+        background: #f0f0f0;
+        padding: 20px;
+        border-radius: 4px;
+        margin: 20px 0;
+        letter-spacing: 2px;
+      }
+      .expires {
+        color: #666;
+        margin: 20px 0;
+      }
+      .message {
+        color: #999;
+        margin-top: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="gift-card">
+      <h1>Gift Card</h1>
+      
+      {% if gift_card.enabled == false or gift_card.expired %}
+        <p style="color: #d32f2f; font-size: 18px;">This gift card has expired.</p>
+      {% endif %}
+      
+      <div class="balance">{{ gift_card.balance | money }}</div>
+      
+      {% if gift_card.expires_on %}
+        <div class="expires">
+          Expires on {{ gift_card.expires_on | date: '%B %e, %Y' }}
+        </div>
+      {% endif %}
+      
+      <div class="code">{{ gift_card.code | format_code }}</div>
+      
+      <p class="message">Use this code at checkout</p>
+      
+      {% if gift_card.pass_url %}
+        <a href="{{ gift_card.pass_url }}" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #2c5aa0; color: white; text-decoration: none; border-radius: 4px;">
+          Add to Apple Wallet
+        </a>
+      {% endif %}
+    </div>
+  </body>
+</html>
+

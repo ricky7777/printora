@@ -2,8 +2,8 @@
 config/settings_data.json
 *.log
 .DS_Store
-node_modules/
-.git/
+node_modules/*
+.git/*
 .gitignore
 
 # Exclude compiled Flutter files that may contain API keys

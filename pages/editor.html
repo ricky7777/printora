@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="/assets/editor/">
+  
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="PrintOra T-Shirt Editor">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="PrintOra Editor">
+  <link rel="apple-touch-icon" href="/assets/editor/icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/assets/editor/favicon.png"/>
+
+  <title>PrintOra T-Shirt Editor</title>
+  <link rel="manifest" href="/assets/editor/manifest.json">
+  
+  <script>
+    // Preserve URL parameters for Flutter app
+    // Flutter app will read these from window.location.search
+    (function() {
+      // Get current URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const price = urlParams.get('price');
+      const type = urlParams.get('type');
+      
+      // Store in sessionStorage for Flutter app to access
+      if (price) {
+        sessionStorage.setItem('editor_price', price);
+      }
+      if (type) {
+        sessionStorage.setItem('editor_type', type);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <script src="/assets/editor/flutter_bootstrap.js" async></script>
+</body>
+</html>
