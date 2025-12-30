@@ -37,7 +37,7 @@
             Perfect for chest logos and small designs
           </p>
           
-          <a href="/pages/custom-editor?price=28&type=small-logo" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/custom-editor">
+          <a href="/pages/editor-index?price=28&type=small-logo" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/editor-index">
             Start Designing
           </a>
         </div>
@@ -82,7 +82,7 @@
             Ideal for most designs and graphics
           </p>
           
-          <a href="/pages/custom-editor?price=35&type=standard-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/custom-editor">
+          <a href="/pages/editor-index?price=35&type=standard-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/editor-index">
             Start Designing
           </a>
         </div>
@@ -122,7 +122,7 @@
             Maximum impact for bold designs
           </p>
           
-          <a href="/pages/custom-editor?price=45&type=large-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/custom-editor">
+          <a href="/pages/editor-index?price=45&type=large-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/editor-index">
             Start Designing
           </a>
         </div>
@@ -263,26 +263,12 @@
 </style>
 
 <script>
-  // Handle editor links for local development
-  // Shopify CLI local dev doesn't serve pages/ directory directly
-  // So we need to redirect to assets/editor/index.html in local dev
+  // Handle editor links - now using Liquid template at /pages/editor-index
+  // Both local dev and production use the same path: /pages/editor-index
+  // Shopify CLI will serve the Liquid template correctly
   (function() {
-    const isLocalDev = window.location.hostname === 'localhost' || 
-                      window.location.hostname === '127.0.0.1';
-    
-    if (isLocalDev) {
-      const editorLinks = document.querySelectorAll('a[data-editor-link="true"]');
-      editorLinks.forEach(link => {
-        const originalHref = link.getAttribute('href');
-        if (originalHref && originalHref.startsWith('/pages/custom-editor')) {
-          // Extract query parameters
-          const url = new URL(originalHref, window.location.origin);
-          const queryString = url.search;
-          // Change to assets/editor/index.html for local dev
-          link.href = `/assets/editor/index.html${queryString}`;
-        }
-      });
-    }
+    // No need for special handling - /pages/editor-index works in both environments
+    // The Liquid template will be served by Shopify CLI in local dev
   })();
 </script>
 
