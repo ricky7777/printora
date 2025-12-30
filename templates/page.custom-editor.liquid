@@ -56,6 +56,123 @@
       if (baseElement) {
         console.log('Flutter base href:', baseElement.href);
       }
+      
+      // Resource path mapping for Shopify flat assets structure
+      // Map Flutter's relative paths to editor- prefixed files
+      const resourceMap = {
+        'main.dart.js': 'editor-main.dart.js',
+        'flutter_service_worker.js': 'editor-flutter_service_worker.js',
+        'canvaskit/canvaskit.js': 'editor-canvaskit.js',
+        'canvaskit/canvaskit.wasm': 'editor-canvaskit.wasm',
+        'canvaskit/chromium/canvaskit.js': 'editor-canvaskit-chromium.js',
+        'canvaskit/chromium/canvaskit.wasm': 'editor-canvaskit-chromium.wasm',
+        'skwasm.js': 'editor-skwasm.js',
+        'skwasm.wasm': 'editor-skwasm.wasm',
+        'skwasm_heavy.js': 'editor-skwasm-heavy.js',
+        'skwasm_heavy.wasm': 'editor-skwasm-heavy.wasm',
+        'assets/FontManifest.json': 'editor-font-manifest.json',
+        'assets/AssetManifest.bin.json': 'editor-asset-manifest.json',
+        'assets/tee_black.png': 'editor-tee-black.png',
+        'assets/tee_white.png': 'editor-tee-white.png',
+        'assets/printora_logo.png': 'editor-printora-logo.png',
+        'assets/size_chart.png': 'editor-size-chart.png',
+        'assets/fonts/MaterialIcons-Regular.otf': 'editor-material-icons.otf',
+        'assets/shaders/ink_sparkle.frag': 'editor-ink-sparkle.frag',
+        'assets/shaders/stretch_effect.frag': 'editor-stretch-effect.frag',
+        'assets/packages/cupertino_icons/assets/CupertinoIcons.ttf': 'editor-cupertino-icons.ttf',
+        'icons/Icon-192.png': 'editor-icon-192.png',
+        'icons/Icon-512.png': 'editor-icon-512.png',
+        'icons/Icon-maskable-192.png': 'editor-icon-maskable-192.png',
+        'icons/Icon-maskable-512.png': 'editor-icon-maskable-512.png',
+        'favicon.png': 'editor-favicon.png',
+        'manifest.json': 'editor-manifest.json'
+      };
+      
+      // Helper function to rewrite resource paths
+      function rewriteResourcePath(url) {
+        if (!url || typeof url !== 'string') return url;
+        
+        // Skip if already has editor- prefix or is external URL
+        if (url.includes('editor-') || url.startsWith('http') || url.startsWith('//')) {
+          return url;
+        }
+        
+        // Try to match and replace
+        for (const [originalPath, mappedPath] of Object.entries(resourceMap)) {
+          // Match exact path or path with query parameters
+          const regex = new RegExp('(^|/)' + originalPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\?|$|/)', 'i');
+          if (regex.test(url)) {
+            const newUrl = url.replace(regex, '$1' + mappedPath + '$2');
+            console.log('Rewriting resource path:', url, '->', newUrl);
+            return newUrl;
+          }
+        }
+        
+        return url;
+      }
+      
+      // Intercept fetch requests
+      const originalFetch = window.fetch;
+      window.fetch = function(input, init) {
+        if (typeof input === 'string') {
+          const rewritten = rewriteResourcePath(input);
+          if (rewritten !== input) {
+            return originalFetch.call(this, rewritten, init);
+          }
+        } else if (input && input.url) {
+          const rewritten = rewriteResourcePath(input.url);
+          if (rewritten !== input.url) {
+            return originalFetch.call(this, { ...input, url: rewritten }, init);
+          }
+        }
+        return originalFetch.call(this, input, init);
+      };
+      
+      // Intercept XMLHttpRequest
+      const originalXHROpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+        const rewritten = rewriteResourcePath(url);
+        return originalXHROpen.call(this, method, rewritten, ...rest);
+      };
+      
+      // Intercept script tag creation
+      const originalCreateElement = document.createElement.bind(document);
+      document.createElement = function(tagName, options) {
+        const element = originalCreateElement(tagName, options);
+        if (tagName.toLowerCase() === 'script') {
+          // Intercept setAttribute
+          const originalSetAttribute = element.setAttribute.bind(element);
+          element.setAttribute = function(name, value) {
+            if (name === 'src' && typeof value === 'string') {
+              const rewritten = rewriteResourcePath(value);
+              return originalSetAttribute('src', rewritten);
+            }
+            return originalSetAttribute(name, value);
+          };
+          
+          // Intercept src property
+          Object.defineProperty(element, 'src', {
+            set: function(value) {
+              const rewritten = rewriteResourcePath(value);
+              element.setAttribute('src', rewritten);
+            },
+            get: function() {
+              return element.getAttribute('src') || '';
+            },
+            configurable: true
+          });
+        }
+        return element;
+      };
+      
+      // Intercept dynamic import (for ES modules)
+      const originalImport = window.__import || (() => {});
+      if (window.__import) {
+        window.__import = function(url) {
+          const rewritten = rewriteResourcePath(url);
+          return originalImport(rewritten);
+        };
+      }
     })();
   </script>
 </head>
