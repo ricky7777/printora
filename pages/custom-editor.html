@@ -1,22 +1,14 @@
-{% layout none %}
-
-{%- comment -%}
-  Flutter Editor Page
-  IMPORTANT: Shopify assets directory is FLAT - no subdirectories allowed!
-  We need to embed the Flutter app directly and use asset_url for all resources
-{%- endcomment -%}
-
 <!DOCTYPE html>
 <html>
 <head>
-  {%- comment -%}
-    Calculate base href for Flutter app
-    Since files are in assets root, base href should point to assets root
-  {%- endcomment -%}
-  {%- assign sample_asset = 'editor-flutter_bootstrap.js' | asset_url -%}
-  {%- assign sample_clean = sample_asset | split: '?' | first -%}
-  {%- assign editor_base = sample_clean | split: 'editor-flutter_bootstrap.js' | first -%}
-  <base href="{{ editor_base }}">
+  <!--
+    Local development version of custom-editor page
+    This file is used for local testing when Shopify CLI doesn't handle Liquid routing
+    For production, use templates/page.custom-editor.liquid
+  -->
+  
+  <!-- Calculate base href for Flutter app -->
+  <base href="/assets/editor/">
   
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -27,13 +19,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="PrintOra Editor">
-  <link rel="apple-touch-icon" href="{{ 'editor-icon-192.png' | asset_url }}">
+  <link rel="apple-touch-icon" href="/assets/editor/icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="{{ 'editor-favicon.png' | asset_url }}"/>
+  <link rel="icon" type="image/png" href="/assets/editor/favicon.png"/>
 
   <title>PrintOra T-Shirt Editor</title>
-  <link rel="manifest" href="{{ 'editor-manifest.json' | asset_url }}">
+  <link rel="manifest" href="/assets/editor/manifest.json">
   
   <script>
     // Preserve URL parameters for Flutter app
@@ -60,6 +52,7 @@
   </script>
 </head>
 <body>
-  <script src="{{ 'editor-flutter_bootstrap.js' | asset_url }}" async></script>
+  <script src="/assets/editor/flutter_bootstrap.js" async></script>
 </body>
 </html>
+

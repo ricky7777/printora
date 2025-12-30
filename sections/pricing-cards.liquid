@@ -37,7 +37,7 @@
             Perfect for chest logos and small designs
           </p>
           
-          <a href="/pages/custom-editor?price=28&type=small-logo" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true">
+          <a href="/pages/custom-editor?price=28&type=small-logo" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/custom-editor">
             Start Designing
           </a>
         </div>
@@ -82,7 +82,7 @@
             Ideal for most designs and graphics
           </p>
           
-          <a href="/pages/custom-editor?price=35&type=standard-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true">
+          <a href="/pages/custom-editor?price=35&type=standard-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/custom-editor">
             Start Designing
           </a>
         </div>
@@ -122,7 +122,7 @@
             Maximum impact for bold designs
           </p>
           
-          <a href="/pages/custom-editor?price=45&type=large-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true">
+          <a href="/pages/custom-editor?price=45&type=large-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/custom-editor">
             Start Designing
           </a>
         </div>
@@ -264,7 +264,8 @@
 
 <script>
   // Handle editor links for local development
-  // In local dev, /pages/custom-editor doesn't work, so redirect to /assets/editor/index.html
+  // Shopify CLI local dev doesn't serve pages/ directory directly
+  // So we need to redirect to assets/editor/index.html in local dev
   (function() {
     const isLocalDev = window.location.hostname === 'localhost' || 
                       window.location.hostname === '127.0.0.1';
@@ -277,7 +278,7 @@
           // Extract query parameters
           const url = new URL(originalHref, window.location.origin);
           const queryString = url.search;
-          // Change to assets/editor/index.html
+          // Change to assets/editor/index.html for local dev
           link.href = `/assets/editor/index.html${queryString}`;
         }
       });
