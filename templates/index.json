@@ -1,0 +1,26 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero",
+      "settings": {}
+    },
+    "pricing_cards": {
+      "type": "pricing-cards",
+      "settings": {}
+    },
+    "features": {
+      "type": "features",
+      "settings": {}
+    },
+    "why_choose": {
+      "type": "why-choose",
+      "settings": {}
+    }
+  },
+  "order": [
+    "hero",
+    "pricing_cards",
+    "features",
+    "why_choose"
+  ]
+}
