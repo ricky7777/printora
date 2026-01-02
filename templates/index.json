@@ -4,7 +4,7 @@
       "type": "hero",
       "settings": {}
     },
-    "pricing_cards": {
+    "pricing-cards": {
       "type": "pricing-cards",
       "settings": {}
     },
@@ -12,15 +12,15 @@
       "type": "features",
       "settings": {}
     },
-    "why_choose": {
+    "why-choose": {
       "type": "why-choose",
       "settings": {}
     }
   },
   "order": [
     "hero",
-    "pricing_cards",
+    "pricing-cards",
     "features",
-    "why_choose"
+    "why-choose"
   ]
 }
