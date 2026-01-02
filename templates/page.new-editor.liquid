@@ -40,8 +40,68 @@
   <script>
     // CRITICAL: This script must run BEFORE Flutter bootstrap loads
     // Preserve URL parameters and set up resource path rewriting
+    // Also intercept checkout navigation IMMEDIATELY
     (function() {
       'use strict';
+      
+      // IMMEDIATE: Set up checkout navigation interception FIRST (before anything else)
+      // This ensures we catch navigation even if Flutter loads quickly
+      (function setupCheckoutInterceptor() {
+        // Function to rewrite order-summary URLs - ALWAYS use /pages/order-summary
+        function rewriteOrderSummaryUrl(url) {
+          if (typeof url !== 'string') return url;
+          
+          // Check if it's trying to navigate to order-summary (any path)
+          if (url.includes('order-summary') || url.includes('order_summary')) {
+            // Extract query parameters
+            let queryString = '';
+            if (url.includes('?')) {
+              queryString = url.substring(url.indexOf('?'));
+            } else {
+              try {
+                const urlObj = new URL(url, window.location.origin);
+                queryString = urlObj.search;
+              } catch (e) {
+                const queryIndex = url.indexOf('?');
+                if (queryIndex !== -1) {
+                  queryString = url.substring(queryIndex);
+                }
+              }
+            }
+            
+            // ALWAYS redirect to /pages/order-summary with same parameters
+            const targetUrl = '/pages/order-summary' + queryString;
+            console.log('[IMMEDIATE] Intercepting checkout navigation:', url, '->', targetUrl);
+            return targetUrl;
+          }
+          return url;
+        }
+        
+        // IMMEDIATELY intercept location.href (before Flutter loads)
+        try {
+          const locationDescriptor = Object.getOwnPropertyDescriptor(window.location, 'href') || 
+                                     Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'href');
+          
+          if (locationDescriptor && locationDescriptor.set) {
+            const originalSetter = locationDescriptor.set;
+            
+            Object.defineProperty(window.location, 'href', {
+              set: function(value) {
+                const rewritten = rewriteOrderSummaryUrl(value);
+                originalSetter.call(window.location, rewritten);
+              },
+              get: function() {
+                return window.location.href;
+              },
+              configurable: true,
+              enumerable: true
+            });
+            console.log('[IMMEDIATE] Checkout navigation interceptor installed (location.href)');
+          }
+        } catch (e) {
+          console.warn('[IMMEDIATE] Failed to intercept location.href:', e);
+        }
+      })();
       
       // Get current URL parameters
       const urlParams = new URLSearchParams(window.location.search);
@@ -285,14 +345,15 @@
       }
       
       // Intercept navigation to order-summary page
+      // ALWAYS redirect to /pages/order-summary (both local dev and production)
       // Flutter app may try to navigate to /assets/order-summary.html in local dev
-      // We'll intercept and redirect to /pages/order-summary
+      // We'll intercept and ALWAYS redirect to /pages/order-summary
       (function() {
-        // Function to rewrite order-summary URLs
+        // Function to rewrite order-summary URLs - ALWAYS use /pages/order-summary
         function rewriteOrderSummaryUrl(url) {
           if (typeof url !== 'string') return url;
           
-          // Check if it's trying to navigate to order-summary
+          // Check if it's trying to navigate to order-summary (any path)
           if (url.includes('order-summary') || url.includes('order_summary')) {
             // Extract query parameters
             let queryString = '';
@@ -312,9 +373,10 @@
               }
             }
             
-            // Redirect to /pages/order-summary with same parameters
+            // ALWAYS redirect to /pages/order-summary with same parameters
+            // This works for both local dev and production
             const targetUrl = '/pages/order-summary' + queryString;
-            console.log('Intercepting navigation to order-summary:', url, '->', targetUrl);
+            console.log('Intercepting checkout navigation (always redirect to /pages/order-summary):', url, '->', targetUrl);
             return targetUrl;
           }
           return url;
@@ -418,22 +480,26 @@
           }
         });
         
-        // Method 6: Periodic check as last resort (check every 100ms)
+        // Method 6: Periodic check as last resort (check every 50ms for faster response)
         let lastHref = window.location.href;
-        setInterval(function() {
+        const checkInterval = setInterval(function() {
           const currentHref = window.location.href;
           if (currentHref !== lastHref) {
             lastHref = currentHref;
-            if (currentHref.includes('/assets/order-summary.html')) {
+            // Check for ANY order-summary path that's NOT /pages/order-summary
+            // This ensures we redirect /assets/order-summary.html or any other path to /pages/order-summary
+            if ((currentHref.includes('order-summary') || currentHref.includes('order_summary')) && 
+                !currentHref.includes('/pages/order-summary')) {
               const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
               const targetUrl = '/pages/order-summary' + queryString;
-              console.log('Periodic check: Redirecting to', targetUrl);
+              console.log('Periodic check: Redirecting from', currentHref, 'to', targetUrl);
+              clearInterval(checkInterval); // Stop checking after redirect
               window.location.replace(targetUrl);
             }
           }
-        }, 100);
+        }, 50); // Check every 50ms for faster response
         
-        console.log('All navigation interceptors installed');
+        console.log('Checkout navigation interceptor installed - ALWAYS redirects to /pages/order-summary (both local and production)');
       })();
       
       console.log('Resource path rewriting initialized');

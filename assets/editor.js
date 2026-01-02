@@ -799,7 +799,8 @@ class TshirtEditor {
       imageRotation: this.imageRotation.toFixed(2)
     });
     
-    window.location.href = `/pages/checkout?${params.toString()}`;
+    // Always navigate to /pages/order-summary (both local and production)
+    window.location.href = `/pages/order-summary?${params.toString()}`;
   }
 }
 
