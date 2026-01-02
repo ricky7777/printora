@@ -284,6 +284,158 @@
         console.log('Flutter base href:', baseElement.href);
       }
       
+      // Intercept navigation to order-summary page
+      // Flutter app may try to navigate to /assets/order-summary.html in local dev
+      // We'll intercept and redirect to /pages/order-summary
+      (function() {
+        // Function to rewrite order-summary URLs
+        function rewriteOrderSummaryUrl(url) {
+          if (typeof url !== 'string') return url;
+          
+          // Check if it's trying to navigate to order-summary
+          if (url.includes('order-summary') || url.includes('order_summary')) {
+            // Extract query parameters
+            let queryString = '';
+            if (url.includes('?')) {
+              queryString = url.substring(url.indexOf('?'));
+            } else {
+              // Try to parse as URL
+              try {
+                const urlObj = new URL(url, window.location.origin);
+                queryString = urlObj.search;
+              } catch (e) {
+                // If parsing fails, check if it's a relative path with query
+                const queryIndex = url.indexOf('?');
+                if (queryIndex !== -1) {
+                  queryString = url.substring(queryIndex);
+                }
+              }
+            }
+            
+            // Redirect to /pages/order-summary with same parameters
+            const targetUrl = '/pages/order-summary' + queryString;
+            console.log('Intercepting navigation to order-summary:', url, '->', targetUrl);
+            return targetUrl;
+          }
+          return url;
+        }
+        
+        // Method 1: Intercept location.href setter (most common)
+        try {
+          const locationDescriptor = Object.getOwnPropertyDescriptor(window.location, 'href') || 
+                                     Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'href');
+          
+          if (locationDescriptor && locationDescriptor.set) {
+            const originalSetter = locationDescriptor.set;
+            
+            Object.defineProperty(window.location, 'href', {
+              set: function(value) {
+                const rewritten = rewriteOrderSummaryUrl(value);
+                originalSetter.call(window.location, rewritten);
+              },
+              get: function() {
+                return window.location.href;
+              },
+              configurable: true,
+              enumerable: true
+            });
+            console.log('Navigation interceptor (location.href) installed');
+          }
+        } catch (e) {
+          console.warn('Failed to intercept location.href:', e);
+        }
+        
+        // Method 2: Intercept window.location assignment (backup)
+        try {
+          const windowLocationDescriptor = Object.getOwnPropertyDescriptor(window, 'location');
+          if (windowLocationDescriptor && windowLocationDescriptor.set) {
+            const originalWindowLocationSetter = windowLocationDescriptor.set;
+            Object.defineProperty(window, 'location', {
+              set: function(value) {
+                const rewritten = rewriteOrderSummaryUrl(value);
+                originalWindowLocationSetter.call(window, rewritten);
+              },
+              get: function() {
+                return window.location;
+              },
+              configurable: true,
+              enumerable: true
+            });
+            console.log('Navigation interceptor (window.location) installed');
+          }
+        } catch (e) {
+          console.warn('Failed to intercept window.location:', e);
+        }
+        
+        // Method 3: Use beforeunload as fallback (monitor navigation)
+        window.addEventListener('beforeunload', function(e) {
+          const currentHref = window.location.href;
+          if (currentHref.includes('order-summary') || currentHref.includes('order_summary')) {
+            if (currentHref.includes('/assets/order-summary.html')) {
+              // Extract query parameters
+              const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
+              const targetUrl = '/pages/order-summary' + queryString;
+              console.log('beforeunload: Redirecting to', targetUrl);
+              // Note: beforeunload doesn't allow navigation, but we can use it for logging
+            }
+          }
+        });
+        
+        // Method 4: Intercept history.pushState and history.replaceState
+        const originalPushState = history.pushState;
+        const originalReplaceState = history.replaceState;
+        
+        history.pushState = function(...args) {
+          if (args.length > 2 && typeof args[2] === 'string') {
+            const rewritten = rewriteOrderSummaryUrl(args[2]);
+            if (rewritten !== args[2]) {
+              args[2] = rewritten;
+              console.log('Intercepted history.pushState:', args[2]);
+            }
+          }
+          return originalPushState.apply(history, args);
+        };
+        
+        history.replaceState = function(...args) {
+          if (args.length > 2 && typeof args[2] === 'string') {
+            const rewritten = rewriteOrderSummaryUrl(args[2]);
+            if (rewritten !== args[2]) {
+              args[2] = rewritten;
+              console.log('Intercepted history.replaceState:', args[2]);
+            }
+          }
+          return originalReplaceState.apply(history, args);
+        };
+        
+        // Method 5: Monitor popstate events (for browser back/forward)
+        window.addEventListener('popstate', function(e) {
+          const currentHref = window.location.href;
+          if (currentHref.includes('/assets/order-summary.html')) {
+            const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
+            const targetUrl = '/pages/order-summary' + queryString;
+            console.log('popstate: Redirecting to', targetUrl);
+            window.location.href = targetUrl;
+          }
+        });
+        
+        // Method 6: Periodic check as last resort (check every 100ms)
+        let lastHref = window.location.href;
+        setInterval(function() {
+          const currentHref = window.location.href;
+          if (currentHref !== lastHref) {
+            lastHref = currentHref;
+            if (currentHref.includes('/assets/order-summary.html')) {
+              const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
+              const targetUrl = '/pages/order-summary' + queryString;
+              console.log('Periodic check: Redirecting to', targetUrl);
+              window.location.replace(targetUrl);
+            }
+          }
+        }, 100);
+        
+        console.log('All navigation interceptors installed');
+      })();
+      
       console.log('Resource path rewriting initialized');
     })();
   </script>
