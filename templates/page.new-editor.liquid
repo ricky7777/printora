@@ -80,9 +80,13 @@
         'assets/shaders/stretch_effect.frag': 'editor-stretch-effect.frag',
         'assets/packages/cupertino_icons/assets/CupertinoIcons.ttf': 'editor-cupertino-icons.ttf',
         'icons/Icon-192.png': 'editor-icon-192.png',
+        'Icon-192.png': 'editor-icon-192.png',
         'icons/Icon-512.png': 'editor-icon-512.png',
+        'Icon-512.png': 'editor-icon-512.png',
         'icons/Icon-maskable-192.png': 'editor-icon-maskable-192.png',
+        'Icon-maskable-192.png': 'editor-icon-maskable-192.png',
         'icons/Icon-maskable-512.png': 'editor-icon-maskable-512.png',
+        'Icon-maskable-512.png': 'editor-icon-maskable-512.png',
         'favicon.png': 'editor-favicon.png',
         'manifest.json': 'editor-manifest.json'
       };
@@ -94,47 +98,75 @@
         // Skip if already has editor- prefix
         if (url.includes('editor-')) return url;
         
-        // Skip external URLs
+        // Handle absolute URLs (including CDN paths)
         if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
-          // But still check if it's our domain and needs rewriting
           try {
-            const urlObj = new URL(url);
+            const urlObj = new URL(url, window.location.origin);
             const pathname = urlObj.pathname;
-            // Extract just the filename/path from the URL
-            const pathParts = pathname.split('/');
+            
+            // Extract filename from pathname
+            const pathParts = pathname.split('/').filter(p => p);
             const filename = pathParts[pathParts.length - 1];
             
             // Check if this filename needs mapping
             for (const [originalPath, mappedPath] of Object.entries(resourceMap)) {
               const originalFilename = originalPath.split('/').pop();
+              const mappedFilename = mappedPath.split('/').pop();
+              
+              // Match by filename (most reliable)
               if (filename === originalFilename && !url.includes('editor-')) {
-                const newPath = pathname.replace(originalFilename, mappedPath.split('/').pop());
-                urlObj.pathname = newPath;
-                console.log('Rewriting external URL:', url, '->', urlObj.toString());
-                return urlObj.toString();
+                // Replace the filename in the path
+                const newPathname = pathname.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
+                urlObj.pathname = newPathname;
+                const rewritten = urlObj.toString();
+                console.log('Rewriting absolute URL:', url, '->', rewritten);
+                return rewritten;
               }
             }
           } catch (e) {
-            // Not a valid URL, continue with original logic
+            console.warn('Error parsing URL:', url, e);
           }
           return url;
         }
         
-        // Handle relative paths
+        // Handle relative paths (including those resolved by base href)
+        // First, try to resolve relative URL to see the actual path
+        try {
+          const resolvedUrl = new URL(url, document.baseURI || window.location.href);
+          const pathname = resolvedUrl.pathname;
+          const filename = pathname.split('/').pop();
+          
+          // Check if filename needs mapping
+          for (const [originalPath, mappedPath] of Object.entries(resourceMap)) {
+            const originalFilename = originalPath.split('/').pop();
+            const mappedFilename = mappedPath.split('/').pop();
+            
+            if (filename === originalFilename && !url.includes('editor-')) {
+              // Return relative path with mapped filename
+              const newUrl = url.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
+              console.log('Rewriting relative URL:', url, '->', newUrl);
+              return newUrl;
+            }
+          }
+        } catch (e) {
+          // Fallback to string matching
+        }
+        
+        // Fallback: direct string matching for relative paths
         for (const [originalPath, mappedPath] of Object.entries(resourceMap)) {
           // Match the path (with or without leading slash, with or without query params)
           if (url.includes(originalPath) && !url.includes('editor-')) {
             const newUrl = url.replace(originalPath, mappedPath);
-            console.log('Rewriting resource path:', url, '->', newUrl);
+            console.log('Rewriting resource path (fallback):', url, '->', newUrl);
             return newUrl;
           }
           
           // Also try matching just the filename
           const originalFilename = originalPath.split('/').pop();
           const mappedFilename = mappedPath.split('/').pop();
-          if (url.endsWith(originalFilename) && !url.includes('editor-')) {
-            const newUrl = url.replace(originalFilename, mappedFilename);
-            console.log('Rewriting filename:', url, '->', newUrl);
+          if (url.endsWith(originalFilename) || url.includes('/' + originalFilename) && !url.includes('editor-')) {
+            const newUrl = url.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
+            console.log('Rewriting filename (fallback):', url, '->', newUrl);
             return newUrl;
           }
         }
