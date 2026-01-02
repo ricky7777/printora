@@ -79,14 +79,12 @@
         'assets/shaders/ink_sparkle.frag': 'editor-ink-sparkle.frag',
         'assets/shaders/stretch_effect.frag': 'editor-stretch-effect.frag',
         'assets/packages/cupertino_icons/assets/CupertinoIcons.ttf': 'editor-cupertino-icons.ttf',
-        'icons/Icon-192.png': 'editor-icon-192.png',
-        'Icon-192.png': 'editor-icon-192.png',
-        'icons/Icon-512.png': 'editor-icon-512.png',
-        'Icon-512.png': 'editor-icon-512.png',
-        'icons/Icon-maskable-192.png': 'editor-icon-maskable-192.png',
-        'Icon-maskable-192.png': 'editor-icon-maskable-192.png',
-        'icons/Icon-maskable-512.png': 'editor-icon-maskable-512.png',
-        'Icon-maskable-512.png': 'editor-icon-maskable-512.png',
+        'icon-192.png': 'editor-icon-192.png',
+        'icon-512.png': 'editor-icon-512.png',
+        'icon-maskable-192.png': 'editor-icon-maskable-192.png',
+        'icon-maskable-192.png': 'editor-icon-maskable-192.png',
+        'icon-maskable-512.png': 'editor-icon-maskable-512.png',
+        'icon-maskable-512.png': 'editor-icon-maskable-512.png',
         'favicon.png': 'editor-favicon.png',
         'manifest.json': 'editor-manifest.json'
       };
@@ -102,6 +100,15 @@
         if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
           try {
             const urlObj = new URL(url, window.location.origin);
+            
+            // CRITICAL: Skip external domains (like gstatic.com) - don't rewrite external URLs
+            const currentHost = window.location.hostname;
+            const urlHost = urlObj.hostname;
+            if (urlHost !== currentHost && urlHost !== '127.0.0.1' && urlHost !== 'localhost') {
+              // External URL - don't rewrite
+              return url;
+            }
+            
             const pathname = urlObj.pathname;
             
             // Extract filename from pathname
@@ -142,8 +149,18 @@
             const mappedFilename = mappedPath.split('/').pop();
             
             if (filename === originalFilename && !url.includes('editor-')) {
-              // Return relative path with mapped filename
-              const newUrl = url.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
+              // Handle assets/ prefix removal: if original path has assets/ but mapped doesn't,
+              // remove assets/ from the URL before replacing
+              let newUrl = url;
+              
+              // If original path starts with "assets/" but mapped path doesn't, remove "assets/" prefix
+              if (originalPath.startsWith('assets/') && !mappedPath.startsWith('assets/')) {
+                // Remove "assets/" prefix from URL if present
+                newUrl = newUrl.replace(/^assets\//, '').replace(/\/assets\//, '/');
+              }
+              
+              // Replace filename
+              newUrl = newUrl.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
               console.log('Rewriting relative URL:', url, '->', newUrl);
               return newUrl;
             }
@@ -156,7 +173,15 @@
         for (const [originalPath, mappedPath] of Object.entries(resourceMap)) {
           // Match the path (with or without leading slash, with or without query params)
           if (url.includes(originalPath) && !url.includes('editor-')) {
-            const newUrl = url.replace(originalPath, mappedPath);
+            let newUrl = url;
+            
+            // Handle assets/ prefix removal
+            if (originalPath.startsWith('assets/') && !mappedPath.startsWith('assets/')) {
+              // Remove "assets/" prefix from URL if present
+              newUrl = newUrl.replace(/^assets\//, '').replace(/\/assets\//, '/');
+            }
+            
+            newUrl = newUrl.replace(originalPath, mappedPath);
             console.log('Rewriting resource path (fallback):', url, '->', newUrl);
             return newUrl;
           }
@@ -165,7 +190,14 @@
           const originalFilename = originalPath.split('/').pop();
           const mappedFilename = mappedPath.split('/').pop();
           if (url.endsWith(originalFilename) || url.includes('/' + originalFilename) && !url.includes('editor-')) {
-            const newUrl = url.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
+            let newUrl = url;
+            
+            // Handle assets/ prefix removal for filename-only matches
+            if (originalPath.startsWith('assets/') && !mappedPath.startsWith('assets/')) {
+              newUrl = newUrl.replace(/^assets\//, '').replace(/\/assets\//, '/');
+            }
+            
+            newUrl = newUrl.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
             console.log('Rewriting filename (fallback):', url, '->', newUrl);
             return newUrl;
           }
@@ -202,9 +234,14 @@
       const originalServiceWorkerRegister = navigator.serviceWorker.register.bind(navigator.serviceWorker);
       if (navigator.serviceWorker && navigator.serviceWorker.register) {
         navigator.serviceWorker.register = function(scriptURL, options) {
-          const rewritten = rewriteResourcePath(scriptURL);
-          console.log('Rewriting Service Worker URL:', scriptURL, '->', rewritten);
-          return originalServiceWorkerRegister(rewritten, options);
+          if (typeof scriptURL === 'string') {
+            const rewritten = rewriteResourcePath(scriptURL);
+            if (rewritten !== scriptURL) {
+              console.log('Rewriting Service Worker URL:', scriptURL, '->', rewritten);
+              return originalServiceWorkerRegister(rewritten, options);
+            }
+          }
+          return originalServiceWorkerRegister(scriptURL, options);
         };
       }
       
