@@ -37,7 +37,7 @@
             Perfect for chest logos and small designs
           </p>
           
-          <a href="/pages/new-editor?price=28&type=small-logo" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/new-editor">
+          <a href="/pages/new-editor" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-params='{"price":28,"type":"small-logo"}'>
             Start Designing
           </a>
         </div>
@@ -82,7 +82,7 @@
             Ideal for most designs and graphics
           </p>
           
-          <a href="/pages/new-editor?price=35&type=standard-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/new-editor">
+          <a href="/pages/new-editor" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-params='{"price":35,"type":"standard-print"}'>
             Start Designing
           </a>
         </div>
@@ -122,7 +122,7 @@
             Maximum impact for bold designs
           </p>
           
-          <a href="/pages/new-editor?price=45&type=large-print" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-href="/pages/new-editor">
+          <a href="/pages/new-editor" class="pricing-card__button pricing-card__button--red block text-center" data-editor-link="true" data-editor-params='{"price":45,"type":"large-print"}'>
             Start Designing
           </a>
         </div>
@@ -263,12 +263,28 @@
 </style>
 
 <script>
-  // Handle editor links - now using Liquid template at /pages/new-editor
-  // Both local dev and production use the same path: /pages/new-editor
-  // Shopify CLI will serve the Liquid template correctly
+  // Handle editor links - store parameters in sessionStorage instead of URL
   (function() {
-    // No need for special handling - /pages/new-editor works in both environments
-    // The Liquid template will be served by Shopify CLI in local dev
+    document.addEventListener('DOMContentLoaded', function() {
+      const editorLinks = document.querySelectorAll('a[data-editor-link="true"]');
+      
+      editorLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          const paramsStr = this.getAttribute('data-editor-params');
+          if (paramsStr) {
+            try {
+              const params = JSON.parse(paramsStr);
+              // Store parameters in sessionStorage
+              sessionStorage.setItem('editor_params', JSON.stringify(params));
+              console.log('Editor: Parameters stored in sessionStorage:', params);
+            } catch (e) {
+              console.error('Editor: Failed to parse parameters:', e);
+            }
+          }
+          // Allow normal navigation to proceed (href will navigate to /pages/new-editor)
+        });
+      });
+    });
   })();
 </script>
 

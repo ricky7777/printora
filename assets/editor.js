@@ -52,7 +52,7 @@ class TshirtEditor {
   }
   
   init() {
-    // Load URL parameters
+    // Load URL parameters (but don't update UI yet, wait for DOM to be ready)
     this.loadUrlParameters();
     
     // Load t-shirt image
@@ -66,15 +66,40 @@ class TshirtEditor {
     
     // Initialize size display (ensure L button is active)
     this.setSize(this.size);
+    
+    // Update print size buttons after DOM is ready
+    // This ensures buttons exist before we try to update their state
+    if (this.printSize) {
+      this.updatePrintSizeButtons();
+    }
+    
+    // Update UI to reflect price and other state from URL parameters
+    this.updateUI();
   }
   
   loadUrlParameters() {
+    // First, try to get parameters from sessionStorage (POST-like behavior)
+    let editorParams = null;
+    try {
+      const paramsStr = sessionStorage.getItem('editor_params');
+      if (paramsStr) {
+        editorParams = JSON.parse(paramsStr);
+        console.log('Editor: Retrieved parameters from sessionStorage:', editorParams);
+        // Clear the data after reading (one-time use)
+        sessionStorage.removeItem('editor_params');
+      }
+    } catch (e) {
+      console.error('Editor: Error reading parameters from sessionStorage:', e);
+    }
+    
+    // Fallback to URL parameters if sessionStorage is not available
     const urlParams = new URLSearchParams(window.location.search);
-    const priceParam = urlParams.get('price');
-    const typeParam = urlParams.get('type');
+    const priceParam = editorParams?.price || urlParams.get('price');
+    const typeParam = editorParams?.type || urlParams.get('type');
     
     if (typeParam) {
       this.type = typeParam;
+      
       switch (typeParam) {
         case 'small-logo':
           this.printSize = 'small';
@@ -91,6 +116,7 @@ class TshirtEditor {
       }
     }
     
+    // Price parameter overrides default price from type
     if (priceParam) {
       const price = parseFloat(priceParam);
       if (price > 0) {
@@ -98,7 +124,15 @@ class TshirtEditor {
       }
     }
     
-    this.updateUI();
+    // Don't update UI here - wait for DOM to be ready in init()
+    // updateUI() and updatePrintSizeButtons() will be called after setupEventListeners()
+  }
+  
+  updatePrintSizeButtons() {
+    // Update print size button active state
+    document.querySelectorAll('.print-size-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.size === this.printSize);
+    });
   }
   
   setupCanvas() {
@@ -1395,8 +1429,8 @@ class TshirtEditor {
       console.error('Checkout: Failed to store preview image:', e);
     }
     
-    // Build checkout URL with parameters
-    const params = new URLSearchParams({
+    // Store order data in sessionStorage for POST-like behavior
+    const orderData = {
       size: this.size,
       quantity: this.quantity.toString(),
       price: this.price.toFixed(2),
@@ -1407,10 +1441,18 @@ class TshirtEditor {
       imageY: this.imageY.toFixed(2),
       imageScale: this.imageScale.toFixed(2),
       imageRotation: this.imageRotation.toFixed(2)
-    });
+    };
     
-    // Always navigate to /pages/order-summary (both local and production)
-    const targetUrl = `/pages/order-summary?${params.toString()}`;
+    try {
+      sessionStorage.setItem('order_data', JSON.stringify(orderData));
+      console.log('Checkout: Order data stored in sessionStorage:', orderData);
+    } catch (e) {
+      console.error('Checkout: Failed to store order data:', e);
+    }
+    
+    // Navigate to order-summary page (data will be read from sessionStorage)
+    // Use GET navigation instead of POST (Shopify pages don't support POST)
+    const targetUrl = '/pages/order-summary';
     console.log('Checkout: Navigating to', targetUrl);
     window.location.href = targetUrl;
   }

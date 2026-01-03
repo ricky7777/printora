@@ -370,11 +370,25 @@
     // Set current year
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-    // Get URL parameters
+    // Get order data from sessionStorage (stored via POST-like behavior)
+    let orderData = null;
+    try {
+      const orderDataStr = sessionStorage.getItem('order_data');
+      if (orderDataStr) {
+        orderData = JSON.parse(orderDataStr);
+        console.log('Order Summary: Retrieved order data from sessionStorage:', orderData);
+        // Clear the data after reading (one-time use)
+        sessionStorage.removeItem('order_data');
+      }
+    } catch (e) {
+      console.error('Order Summary: Error reading order data from sessionStorage:', e);
+    }
+    
+    // Fallback to URL parameters if sessionStorage data is not available
     const urlParams = new URLSearchParams(window.location.search);
     const designId = urlParams.get('designId');
     
-    // Get screenshot from sessionStorage (stored by Flutter editor)
+    // Get screenshot from sessionStorage
     let previewImage = null;
     try {
       previewImage = sessionStorage.getItem('checkout_preview_image');
@@ -383,18 +397,19 @@
       console.error('Order Summary: Error reading sessionStorage:', e);
     }
     
-    const size = urlParams.get('size');
-    const quantity = parseInt(urlParams.get('quantity') || '1');
-    const price = parseFloat(urlParams.get('price') || '0');
-    const type = urlParams.get('type');
-    const printSize = urlParams.get('printSize');
-    const tshirtColor = urlParams.get('tshirtColor');
-    const imageX = parseFloat(urlParams.get('imageX') || '0');
-    const imageY = parseFloat(urlParams.get('imageY') || '0');
-    const imageScale = parseFloat(urlParams.get('imageScale') || '1');
-    const imageRotation = parseFloat(urlParams.get('imageRotation') || '0');
+    // Get order parameters from sessionStorage (POST data) or URL (fallback)
+    const size = orderData?.size || urlParams.get('size');
+    const quantity = parseInt(orderData?.quantity || urlParams.get('quantity') || '1');
+    const price = parseFloat(orderData?.price || urlParams.get('price') || '0');
+    const type = orderData?.type || urlParams.get('type');
+    const printSize = orderData?.printSize || urlParams.get('printSize');
+    const tshirtColor = orderData?.tshirtColor || urlParams.get('tshirtColor');
+    const imageX = parseFloat(orderData?.imageX || urlParams.get('imageX') || '0');
+    const imageY = parseFloat(orderData?.imageY || urlParams.get('imageY') || '0');
+    const imageScale = parseFloat(orderData?.imageScale || urlParams.get('imageScale') || '1');
+    const imageRotation = parseFloat(orderData?.imageRotation || urlParams.get('imageRotation') || '0');
     
-    console.log('Order Summary: URL params - size:', size, 'quantity:', quantity, 'price:', price, 'type:', type, 'printSize:', printSize, 'tshirtColor:', tshirtColor);
+    console.log('Order Summary: Order data - size:', size, 'quantity:', quantity, 'price:', price, 'type:', type, 'printSize:', printSize, 'tshirtColor:', tshirtColor);
 
     // Display order details
     document.getElementById('sizeDisplay').textContent = size || '-';
@@ -510,33 +525,32 @@
     // Continue button handler
     const continueButton = document.getElementById('continueButton');
     continueButton.addEventListener('click', function() {
-      // Build URL with order parameters
-      const queryParams = new URLSearchParams();
-      queryParams.set('size', size || '');
-      queryParams.set('quantity', quantity.toString());
-      queryParams.set('price', price.toFixed(2));
-      queryParams.set('type', type || '');
-      queryParams.set('tshirtColor', tshirtColor || '');
+      // Store checkout data in sessionStorage for POST-like behavior
+      const checkoutData = {
+        size: size || '',
+        quantity: quantity.toString(),
+        price: price.toFixed(2),
+        type: type || '',
+        tshirtColor: tshirtColor || '',
+        printSize: printSize || '',
+        designId: designId || '',
+        imageX: imageX.toString(),
+        imageY: imageY.toString(),
+        imageScale: imageScale.toString(),
+        imageRotation: imageRotation.toString()
+      };
       
-      if (printSize) {
-        queryParams.set('printSize', printSize);
+      try {
+        sessionStorage.setItem('checkout_data', JSON.stringify(checkoutData));
+        console.log('Order Summary: Checkout data stored in sessionStorage:', checkoutData);
+      } catch (e) {
+        console.error('Order Summary: Failed to store checkout data:', e);
       }
       
-      if (designId) {
-        queryParams.set('designId', designId);
-      }
-      
-      // Add image transformation parameters if available
-      if (imageX !== 0) queryParams.set('imageX', imageX.toString());
-      if (imageY !== 0) queryParams.set('imageY', imageY.toString());
-      if (imageScale !== 1) queryParams.set('imageScale', imageScale.toString());
-      if (imageRotation !== 0) queryParams.set('imageRotation', imageRotation.toString());
-      
-      // Navigate to checkout page
-      // Use Shopify page path: /pages/checkout
-      const checkoutPath = '/pages/checkout';
-      const targetUrl = checkoutPath + '?' + queryParams.toString();
-      console.log('Order Summary: Navigating to:', targetUrl);
+      // Navigate to checkout page (data will be read from sessionStorage)
+      // Use GET navigation instead of POST (Shopify pages don't support POST)
+      const targetUrl = '/pages/checkout';
+      console.log('Order Summary: Navigating to', targetUrl);
       window.location.href = targetUrl;
     });
   </script>
