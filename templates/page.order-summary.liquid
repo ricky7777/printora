@@ -277,6 +277,114 @@
     .continue-button:active {
       transform: scale(0.98);
     }
+
+    .contact-form-container {
+      margin-top: 24px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 12px;
+    }
+
+    .contact-form-group {
+      margin-bottom: 20px;
+    }
+
+    .contact-form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .contact-form-label .required {
+      color: #EF4444;
+      margin-left: 4px;
+    }
+
+    .contact-form-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+
+    .contact-form-input:focus {
+      outline: none;
+      border-color: #FF6B9D;
+    }
+
+    .contact-form-input.error {
+      border-color: #EF4444;
+    }
+
+    .contact-form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+
+    .contact-form-textarea:focus {
+      outline: none;
+      border-color: #FF6B9D;
+    }
+
+    .error-message {
+      color: #EF4444;
+      font-size: 14px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .phone-input-wrapper {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .phone-prefix {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background-color: #f0f0f0;
+      border: 2px solid #e0e0e0;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      font-size: 16px;
+      color: #666;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .phone-prefix .flag-icon {
+      width: 20px;
+      height: 15px;
+      margin-right: 8px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+
+    .phone-input-wrapper .contact-form-input {
+      border-radius: 0 8px 8px 0;
+      flex: 1;
+    }
+
+    .phone-input-wrapper .contact-form-input.error {
+      border-left: 2px solid #EF4444;
+    }
   </style>
 </head>
 <body>
@@ -346,6 +454,58 @@
                 <div class="total-price-label-note">(include GST)</div>
               </div>
               <span class="total-price-value" id="totalPriceDisplay">-</span>
+            </div>
+          </div>
+
+          <!-- Contact Information Form -->
+          <div class="contact-form-container">
+            <div class="contact-form-group">
+              <label for="customerEmail" class="contact-form-label">
+                Email <span class="required">*</span>
+              </label>
+              <input 
+                type="email" 
+                id="customerEmail" 
+                name="email" 
+                class="contact-form-input" 
+                placeholder="your.email@example.com"
+                required
+              >
+              <div class="error-message" id="emailError">Please enter a valid email address</div>
+            </div>
+
+            <div class="contact-form-group">
+              <label for="customerPhone" class="contact-form-label">
+                Phone Number <span class="required">*</span>
+              </label>
+              <div class="phone-input-wrapper">
+                <div class="phone-prefix">
+                  <img src="https://flagcdn.com/w20/nz.png" alt="NZ" class="flag-icon" onerror="this.style.display='none'">
+                  <span>+64</span>
+                </div>
+                <input 
+                  type="tel" 
+                  id="customerPhone" 
+                  name="phone" 
+                  class="contact-form-input" 
+                  placeholder="21 123 4567"
+                  required
+                >
+              </div>
+              <div class="error-message" id="phoneError">Please enter your phone number</div>
+            </div>
+
+            <div class="contact-form-group">
+              <label for="customerNotes" class="contact-form-label">
+                Notes
+              </label>
+              <textarea 
+                id="customerNotes" 
+                name="notes" 
+                class="contact-form-textarea" 
+                placeholder="Any special instructions or notes..."
+                rows="4"
+              ></textarea>
             </div>
           </div>
 
@@ -523,8 +683,85 @@
     drawPreview(previewImage);
 
     // Continue button handler
+    // Form validation
+    function validateForm() {
+      let isValid = true;
+      
+      // Validate email
+      const emailInput = document.getElementById('customerEmail');
+      const emailError = document.getElementById('emailError');
+      const email = emailInput.value.trim();
+      
+      if (!email) {
+        emailInput.classList.add('error');
+        emailError.textContent = 'Please enter your email address';
+        emailError.classList.add('show');
+        isValid = false;
+      } else {
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          emailInput.classList.add('error');
+          emailError.textContent = 'Please enter a valid email address';
+          emailError.classList.add('show');
+          isValid = false;
+        } else {
+          emailInput.classList.remove('error');
+          emailError.classList.remove('show');
+        }
+      }
+      
+      // Validate phone
+      const phoneInput = document.getElementById('customerPhone');
+      const phoneError = document.getElementById('phoneError');
+      const phone = phoneInput.value.trim();
+      
+      if (!phone) {
+        phoneInput.classList.add('error');
+        phoneError.textContent = 'Please enter your phone number';
+        phoneError.classList.add('show');
+        isValid = false;
+      } else {
+        phoneInput.classList.remove('error');
+        phoneError.classList.remove('show');
+      }
+      
+      return isValid;
+    }
+    
+    // Remove error state on input
+    document.getElementById('customerEmail').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('emailError').classList.remove('show');
+    });
+    
+    document.getElementById('customerPhone').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('phoneError').classList.remove('show');
+    });
+
+    // Continue button handler
     const continueButton = document.getElementById('continueButton');
     continueButton.addEventListener('click', function() {
+      // Validate form before proceeding
+      if (!validateForm()) {
+        console.log('Order Summary: Form validation failed');
+        // Scroll to first error field
+        const firstError = document.querySelector('.contact-form-input.error');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstError.focus();
+        }
+        return;
+      }
+      
+      // Get form values
+      const email = document.getElementById('customerEmail').value.trim();
+      const phoneInput = document.getElementById('customerPhone').value.trim();
+      // Combine +64 prefix with user input
+      const phone = phoneInput ? '+64 ' + phoneInput : '';
+      const notes = document.getElementById('customerNotes').value.trim();
+      
       // Store checkout data in sessionStorage for POST-like behavior
       const checkoutData = {
         size: size || '',
@@ -537,7 +774,10 @@
         imageX: imageX.toString(),
         imageY: imageY.toString(),
         imageScale: imageScale.toString(),
-        imageRotation: imageRotation.toString()
+        imageRotation: imageRotation.toString(),
+        email: email,
+        phone: phone,
+        notes: notes
       };
       
       try {
