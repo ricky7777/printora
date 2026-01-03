@@ -47,6 +47,9 @@
       // IMMEDIATE: Set up checkout navigation interception FIRST (before anything else)
       // This ensures we catch navigation even if Flutter loads quickly
       (function setupCheckoutInterceptor() {
+        // DEBUG MODE: Set to true to prevent navigation and only log
+        const DEBUG_MODE = true; // Change to false to enable actual navigation
+        
         // Function to rewrite order-summary URLs - ALWAYS use /pages/order-summary
         function rewriteOrderSummaryUrl(url) {
           if (typeof url !== 'string') return url;
@@ -71,35 +74,85 @@
             
             // ALWAYS redirect to /pages/order-summary with same parameters
             const targetUrl = '/pages/order-summary' + queryString;
-            console.log('[IMMEDIATE] Intercepting checkout navigation:', url, '->', targetUrl);
-            return targetUrl;
+            
+            console.log('=== CHECKOUT NAVIGATION INTERCEPTED ===');
+            console.log('📍 原始 URL:', url);
+            console.log('🎯 目標 URL:', targetUrl);
+            console.log('📋 Query 參數:', queryString);
+            
+            if (DEBUG_MODE) {
+              console.log('🚫 DEBUG MODE: 已阻止導航（僅記錄日誌）');
+              // Return current URL to prevent navigation
+              return window.location.href;
+            } else {
+              console.log('✅ 導航到:', targetUrl);
+              return targetUrl;
+            }
           }
           return url;
         }
         
         // IMMEDIATELY intercept location.href (before Flutter loads)
+        // Note: If location.href is not configurable, the second interceptor will handle it
         try {
           const locationDescriptor = Object.getOwnPropertyDescriptor(window.location, 'href') || 
                                      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'href');
           
           if (locationDescriptor && locationDescriptor.set) {
-            const originalSetter = locationDescriptor.set;
-            
-            Object.defineProperty(window.location, 'href', {
-              set: function(value) {
-                const rewritten = rewriteOrderSummaryUrl(value);
-                originalSetter.call(window.location, rewritten);
-              },
-              get: function() {
-                return window.location.href;
-              },
-              configurable: true,
-              enumerable: true
-            });
-            console.log('[IMMEDIATE] Checkout navigation interceptor installed (location.href)');
+            // Check if already intercepted (has configurable: true)
+            if (locationDescriptor.configurable === false) {
+              // Not configurable at this point, but second interceptor will try again later
+              // This is normal - some browsers/contexts make it configurable later
+              console.log('[IMMEDIATE] location.href is not configurable yet, second interceptor will handle it');
+            } else {
+              const originalSetter = locationDescriptor.set;
+              
+              try {
+                Object.defineProperty(window.location, 'href', {
+                  set: function(value) {
+                    console.log('[IMMEDIATE] location.href setter called with:', value);
+                    const rewritten = rewriteOrderSummaryUrl(value);
+                    if (rewritten !== value) {
+                      console.log('[IMMEDIATE] URL rewritten from', value, 'to', rewritten);
+                    }
+                    // In DEBUG_MODE, don't call originalSetter - this prevents navigation
+                    if (!DEBUG_MODE) {
+                      originalSetter.call(window.location, rewritten);
+                    } else {
+                      console.log('[IMMEDIATE] DEBUG MODE: Navigation blocked');
+                    }
+                  },
+                  get: function() {
+                    return window.location.href;
+                  },
+                  configurable: true,
+                  enumerable: true
+                });
+                console.log('[IMMEDIATE] Checkout navigation interceptor installed (location.href)');
+              } catch (defineError) {
+                // If already defined, try to wrap the existing setter
+                if (defineError.message && defineError.message.includes('Cannot redefine property')) {
+                  console.log('[IMMEDIATE] location.href already intercepted, wrapping existing setter');
+                  // Wrap the existing setter
+                  const wrappedSetter = locationDescriptor.set;
+                  locationDescriptor.set = function(value) {
+                    const rewritten = rewriteOrderSummaryUrl(value);
+                    wrappedSetter.call(window.location, rewritten);
+                  };
+                } else {
+                  throw defineError;
+                }
+              }
+            }
           }
         } catch (e) {
-          console.warn('[IMMEDIATE] Failed to intercept location.href:', e);
+          // If error is "Cannot redefine property", it means already intercepted
+          if (e.message && e.message.includes('Cannot redefine property')) {
+            console.log('[IMMEDIATE] location.href already intercepted by another script, skipping');
+          } else {
+            // This is OK - second interceptor will handle it
+            console.log('[IMMEDIATE] location.href interception deferred to second interceptor');
+          }
         }
       })();
       
@@ -349,6 +402,9 @@
       // Flutter app may try to navigate to /assets/order-summary.html in local dev
       // We'll intercept and ALWAYS redirect to /pages/order-summary
       (function() {
+        // DEBUG MODE: Set to true to prevent navigation and only log
+        const DEBUG_MODE = true; // Change to false to enable actual navigation
+        
         // Function to rewrite order-summary URLs - ALWAYS use /pages/order-summary
         function rewriteOrderSummaryUrl(url) {
           if (typeof url !== 'string') return url;
@@ -376,46 +432,94 @@
             // ALWAYS redirect to /pages/order-summary with same parameters
             // This works for both local dev and production
             const targetUrl = '/pages/order-summary' + queryString;
-            console.log('Intercepting checkout navigation (always redirect to /pages/order-summary):', url, '->', targetUrl);
-            return targetUrl;
+            
+            console.log('=== CHECKOUT NAVIGATION INTERCEPTED ===');
+            console.log('📍 原始 URL:', url);
+            console.log('🎯 目標 URL:', targetUrl);
+            console.log('📋 Query 參數:', queryString);
+            
+            if (DEBUG_MODE) {
+              console.log('🚫 DEBUG MODE: 已阻止導航（僅記錄日誌）');
+              // Return current URL to prevent navigation
+              return window.location.href;
+            } else {
+              console.log('✅ 導航到:', targetUrl);
+              return targetUrl;
+            }
           }
           return url;
         }
         
         // Method 1: Intercept location.href setter (most common)
+        // Skip if already intercepted by the IMMEDIATE interceptor
         try {
           const locationDescriptor = Object.getOwnPropertyDescriptor(window.location, 'href') || 
                                      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'href');
           
+          // Always try to intercept - don't skip
           if (locationDescriptor && locationDescriptor.set) {
             const originalSetter = locationDescriptor.set;
             
-            Object.defineProperty(window.location, 'href', {
-              set: function(value) {
-                const rewritten = rewriteOrderSummaryUrl(value);
-                originalSetter.call(window.location, rewritten);
-              },
-              get: function() {
-                return window.location.href;
-              },
-              configurable: true,
-              enumerable: true
-            });
-            console.log('Navigation interceptor (location.href) installed');
+            try {
+              Object.defineProperty(window.location, 'href', {
+                set: function(value) {
+                  console.log('[SECOND] location.href setter called with:', value);
+                  const rewritten = rewriteOrderSummaryUrl(value);
+                  if (rewritten !== value) {
+                    console.log('[SECOND] URL rewritten from', value, 'to', rewritten);
+                  }
+                  // In DEBUG_MODE, don't call originalSetter - this prevents navigation
+                  if (!DEBUG_MODE) {
+                    originalSetter.call(window.location, rewritten);
+                  } else {
+                    console.log('[SECOND] DEBUG MODE: Navigation blocked');
+                  }
+                },
+                get: function() {
+                  return window.location.href;
+                },
+                configurable: true,
+                enumerable: true
+              });
+              console.log('[SECOND] Navigation interceptor (location.href) installed successfully');
+            } catch (defineError) {
+              // If already defined, it means another interceptor already set it
+              if (defineError.message && defineError.message.includes('Cannot redefine property')) {
+                console.log('[SECOND] location.href already intercepted by first interceptor, that\'s OK');
+              } else {
+                console.warn('[SECOND] Failed to install location.href interceptor:', defineError);
+              }
+            }
           }
         } catch (e) {
-          console.warn('Failed to intercept location.href:', e);
+          // If error is "Cannot redefine property", it means already intercepted
+          if (e.message && e.message.includes('Cannot redefine property')) {
+            console.log('Navigation interceptor (location.href) already installed, skipping duplicate');
+          } else {
+            console.warn('Failed to intercept location.href:', e);
+          }
         }
         
         // Method 2: Intercept window.location assignment (backup)
+        // Skip if already intercepted by the IMMEDIATE interceptor
         try {
           const windowLocationDescriptor = Object.getOwnPropertyDescriptor(window, 'location');
+          // Always try to intercept - don't skip
           if (windowLocationDescriptor && windowLocationDescriptor.set) {
             const originalWindowLocationSetter = windowLocationDescriptor.set;
             Object.defineProperty(window, 'location', {
               set: function(value) {
+                console.log('[SECOND] window.location setter called with:', value);
                 const rewritten = rewriteOrderSummaryUrl(value);
-                originalWindowLocationSetter.call(window, rewritten);
+                if (rewritten !== value) {
+                  console.log('[SECOND] window.location URL rewritten from', value, 'to', rewritten);
+                }
+                // In DEBUG_MODE, don't call originalWindowLocationSetter - this prevents navigation
+                if (!DEBUG_MODE) {
+                  originalWindowLocationSetter.call(window, rewritten);
+                } else {
+                  console.log('[SECOND] DEBUG MODE: window.location navigation blocked');
+                }
               },
               get: function() {
                 return window.location;
@@ -426,7 +530,12 @@
             console.log('Navigation interceptor (window.location) installed');
           }
         } catch (e) {
-          console.warn('Failed to intercept window.location:', e);
+          // If error is "Cannot redefine property", it means already intercepted
+          if (e.message && e.message.includes('Cannot redefine property')) {
+            console.log('Navigation interceptor (window.location) already installed, skipping duplicate');
+          } else {
+            console.warn('Failed to intercept window.location:', e);
+          }
         }
         
         // Method 3: Use beforeunload as fallback (monitor navigation)
@@ -476,7 +585,12 @@
             const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
             const targetUrl = '/pages/order-summary' + queryString;
             console.log('popstate: Redirecting to', targetUrl);
-            window.location.href = targetUrl;
+            
+            if (DEBUG_MODE) {
+              console.log('🚫 DEBUG MODE: 已阻止 popstate 導航（僅記錄日誌）');
+            } else {
+              window.location.href = targetUrl;
+            }
           }
         });
         
@@ -493,8 +607,14 @@
               const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
               const targetUrl = '/pages/order-summary' + queryString;
               console.log('Periodic check: Redirecting from', currentHref, 'to', targetUrl);
-              clearInterval(checkInterval); // Stop checking after redirect
-              window.location.replace(targetUrl);
+              
+              if (DEBUG_MODE) {
+                console.log('🚫 DEBUG MODE: 已阻止週期檢查的導航（僅記錄日誌）');
+                // Don't navigate in debug mode
+              } else {
+                clearInterval(checkInterval); // Stop checking after redirect
+                window.location.replace(targetUrl);
+              }
             }
           }
         }, 50); // Check every 50ms for faster response
