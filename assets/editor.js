@@ -141,9 +141,18 @@ class TshirtEditor {
   async loadTshirtImage() {
     const tshirtImage = new Image();
     tshirtImage.crossOrigin = 'anonymous';
-    // Asset URL will be set from Liquid template
-    const assetBase = window.assetBaseUrl || '/assets/';
-    tshirtImage.src = assetBase + `tee_${this.tshirtColor}.png`;
+    // Use Shopify asset_url format from Liquid template
+    // window.tshirtImageUrls is set by Liquid template using asset_url filter
+    const tshirtFileName = `tee_${this.tshirtColor}.png`;
+    
+    // Try to get asset URL from window (set by Liquid template)
+    if (window.tshirtImageUrls && window.tshirtImageUrls[this.tshirtColor]) {
+      tshirtImage.src = window.tshirtImageUrls[this.tshirtColor];
+    } else {
+      // Fallback: try to use assetBaseUrl or construct path
+      const assetBase = window.assetBaseUrl || '/assets/';
+      tshirtImage.src = assetBase + tshirtFileName;
+    }
     
     return new Promise((resolve, reject) => {
       tshirtImage.onload = () => {
@@ -151,7 +160,10 @@ class TshirtEditor {
         this.render();
         resolve();
       };
-      tshirtImage.onerror = reject;
+      tshirtImage.onerror = () => {
+        console.error('Failed to load t-shirt image:', tshirtImage.src);
+        reject(new Error(`Failed to load t-shirt image: ${tshirtImage.src}`));
+      };
     });
   }
   

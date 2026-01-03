@@ -364,6 +364,13 @@
     </div>
   </div>
 
+  <script>
+    // Set t-shirt image URLs using Shopify asset_url filter
+    window.tshirtImageUrls = {
+      black: '{{ "tee_black.png" | asset_url }}',
+      white: '{{ "tee_white.png" | asset_url }}'
+    };
+  </script>
   <script src="{{ 'editor.js' | asset_url }}" defer></script>
   <script>
     // Back button handler
