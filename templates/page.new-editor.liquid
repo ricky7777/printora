@@ -1,478 +1,190 @@
 {% layout none %}
 
 {%- comment -%}
-  Flutter New Editor Page
-  Converted from assets/editor/index.html
-  IMPORTANT: Shopify assets directory is FLAT - no subdirectories allowed!
-  All resources are in assets root with editor- prefix
+  PrintOra T-Shirt Editor Page
+  Pure JavaScript implementation (no Flutter)
   Path: /pages/new-editor
 {%- endcomment -%}
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  {%- comment -%}
-    Calculate base href for Flutter app
-    Since files are in assets root, base href should point to assets root
-  {%- endcomment -%}
-  {%- assign sample_asset = 'editor-flutter_bootstrap.js' | asset_url -%}
-  {%- assign sample_clean = sample_asset | split: '?' | first -%}
-  {%- assign editor_base = sample_clean | split: 'editor-flutter_bootstrap.js' | first -%}
-  <base href="{{ editor_base }}">
-  
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="PrintOra T-Shirt Editor">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="PrintOra Editor">
-  <link rel="apple-touch-icon" href="{{ 'editor-icon-192.png' | asset_url }}">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="{{ 'editor-favicon.png' | asset_url }}"/>
-
   <title>PrintOra T-Shirt Editor</title>
-  <link rel="manifest" href="{{ 'editor-manifest.json' | asset_url }}">
+  
+  <link rel="stylesheet" href="{{ 'editor.css' | asset_url }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+  <style>
+    .header__logo {
+      display: flex;
+      align-items: center;
+    }
+    
+    .header__logo-image {
+      max-height: 2.4rem;
+      max-width: 9rem;
+      height: auto;
+      width: auto;
+      object-fit: contain;
+    }
+    
+    @media screen and (max-width: 767px) {
+      .header__logo-image {
+        max-height: 1.8rem;
+        max-width: 7.2rem;
+      }
+    }
+    
+    .header-nav-link {
+      color: #1F2937;
+      font-weight: 300;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: opacity 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .header-nav-link:hover {
+      opacity: 0.8;
+    }
+    
+    .header__cart {
+      display: flex;
+      align-items: center;
+    }
+    
+    .header__cart-image {
+      width: 2.4rem;
+      height: 2.4rem;
+      object-fit: contain;
+    }
+    
+    @media screen and (max-width: 767px) {
+      .header__cart-image {
+        width: 2rem;
+        height: 2rem;
+      }
+    }
+    
+    .header__back-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.4rem;
+      height: 2.4rem;
+      background-color: transparent;
+      border: 1.5px solid #1F2937;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 1rem;
+      padding: 0;
+    }
+    
+    .header__back-button:hover {
+      background-color: rgba(31, 41, 55, 0.1);
+      transform: scale(1.05);
+    }
+    
+    .header__back-button svg {
+      width: 1.2rem;
+      height: 1.2rem;
+      stroke: #1F2937;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    @media screen and (max-width: 767px) {
+      .header__back-button {
+        width: 2rem;
+        height: 2rem;
+        margin-right: 0.75rem;
+      }
+      
+      .header__back-button svg {
+        width: 1rem;
+        height: 1rem;
+      }
+    }
+    
+    .bg-mint {
+      background-color: #A8E6CF;
+    }
+  </style>
   
   <script>
-    // CRITICAL: This script must run BEFORE Flutter bootstrap loads
-    // Preserve URL parameters and set up resource path rewriting
-    // Also intercept checkout navigation IMMEDIATELY
-    (function() {
-      'use strict';
-      
-      // IMMEDIATE: Set up checkout navigation interception FIRST (before anything else)
-      // This ensures we catch navigation even if Flutter loads quickly
-      (function setupCheckoutInterceptor() {
-        // DEBUG MODE: Set to true to prevent navigation and only log
-        const DEBUG_MODE = true; // Change to false to enable actual navigation
+    // DEBUG MODE: Set to true to prevent navigation and only log
+    const DEBUG_MODE = true; // Change to false to enable actual navigation
+    
+    // Checkout navigation interceptor (for debugging)
+    (function setupCheckoutInterceptor() {
+      function rewriteOrderSummaryUrl(url) {
+        if (typeof url !== 'string') return url;
         
-        // Function to rewrite order-summary URLs - ALWAYS use /pages/order-summary
-        function rewriteOrderSummaryUrl(url) {
-          if (typeof url !== 'string') return url;
-          
-          // Check if it's trying to navigate to order-summary (any path)
-          if (url.includes('order-summary') || url.includes('order_summary')) {
-            // Extract query parameters
-            let queryString = '';
-            if (url.includes('?')) {
-              queryString = url.substring(url.indexOf('?'));
-            } else {
-              try {
-                const urlObj = new URL(url, window.location.origin);
-                queryString = urlObj.search;
-              } catch (e) {
-                const queryIndex = url.indexOf('?');
-                if (queryIndex !== -1) {
-                  queryString = url.substring(queryIndex);
-                }
-              }
-            }
-            
-            // ALWAYS redirect to /pages/order-summary with same parameters
-            const targetUrl = '/pages/order-summary' + queryString;
-            
-            console.log('=== CHECKOUT NAVIGATION INTERCEPTED ===');
-            console.log('📍 原始 URL:', url);
-            console.log('🎯 目標 URL:', targetUrl);
-            console.log('📋 Query 參數:', queryString);
-            
-            if (DEBUG_MODE) {
-              console.log('🚫 DEBUG MODE: 已阻止導航（僅記錄日誌）');
-              // Return current URL to prevent navigation
-              return window.location.href;
-            } else {
-              console.log('✅ 導航到:', targetUrl);
-              return targetUrl;
-            }
-          }
-          return url;
-        }
-        
-        // IMMEDIATELY intercept location.href (before Flutter loads)
-        // Note: If location.href is not configurable, the second interceptor will handle it
-        try {
-          const locationDescriptor = Object.getOwnPropertyDescriptor(window.location, 'href') || 
-                                     Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'href');
-          
-          if (locationDescriptor && locationDescriptor.set) {
-            // Check if already intercepted (has configurable: true)
-            if (locationDescriptor.configurable === false) {
-              // Not configurable at this point, but second interceptor will try again later
-              // This is normal - some browsers/contexts make it configurable later
-              console.log('[IMMEDIATE] location.href is not configurable yet, second interceptor will handle it');
-            } else {
-              const originalSetter = locationDescriptor.set;
-              
-              try {
-                Object.defineProperty(window.location, 'href', {
-                  set: function(value) {
-                    console.log('[IMMEDIATE] location.href setter called with:', value);
-                    const rewritten = rewriteOrderSummaryUrl(value);
-                    if (rewritten !== value) {
-                      console.log('[IMMEDIATE] URL rewritten from', value, 'to', rewritten);
-                    }
-                    // In DEBUG_MODE, don't call originalSetter - this prevents navigation
-                    if (!DEBUG_MODE) {
-                      originalSetter.call(window.location, rewritten);
-                    } else {
-                      console.log('[IMMEDIATE] DEBUG MODE: Navigation blocked');
-                    }
-                  },
-                  get: function() {
-                    return window.location.href;
-                  },
-                  configurable: true,
-                  enumerable: true
-                });
-                console.log('[IMMEDIATE] Checkout navigation interceptor installed (location.href)');
-              } catch (defineError) {
-                // If already defined, try to wrap the existing setter
-                if (defineError.message && defineError.message.includes('Cannot redefine property')) {
-                  console.log('[IMMEDIATE] location.href already intercepted, wrapping existing setter');
-                  // Wrap the existing setter
-                  const wrappedSetter = locationDescriptor.set;
-                  locationDescriptor.set = function(value) {
-                    const rewritten = rewriteOrderSummaryUrl(value);
-                    wrappedSetter.call(window.location, rewritten);
-                  };
-                } else {
-                  throw defineError;
-                }
-              }
-            }
-          }
-        } catch (e) {
-          // If error is "Cannot redefine property", it means already intercepted
-          if (e.message && e.message.includes('Cannot redefine property')) {
-            console.log('[IMMEDIATE] location.href already intercepted by another script, skipping');
+        if (url.includes('order-summary') || url.includes('order_summary')) {
+          let queryString = '';
+          if (url.includes('?')) {
+            queryString = url.substring(url.indexOf('?'));
           } else {
-            // This is OK - second interceptor will handle it
-            console.log('[IMMEDIATE] location.href interception deferred to second interceptor');
-          }
-        }
-      })();
-      
-      // Get current URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const price = urlParams.get('price');
-      const type = urlParams.get('type');
-      
-      // Store in sessionStorage for Flutter app to access
-      if (price) {
-        sessionStorage.setItem('editor_price', price);
-      }
-      if (type) {
-        sessionStorage.setItem('editor_type', type);
-      }
-      
-      // Resource path mapping for Shopify flat assets structure
-      // Map Flutter's relative paths to editor- prefixed files
-      const resourceMap = {
-        'main.dart.js': 'editor-main.dart.js',
-        'flutter_service_worker.js': 'editor-flutter_service_worker.js',
-        'canvaskit/canvaskit.js': 'editor-canvaskit.js',
-        'canvaskit/canvaskit.wasm': 'editor-canvaskit.wasm',
-        'canvaskit/chromium/canvaskit.js': 'editor-canvaskit-chromium.js',
-        'canvaskit/chromium/canvaskit.wasm': 'editor-canvaskit-chromium.wasm',
-        'skwasm.js': 'editor-skwasm.js',
-        'skwasm.wasm': 'editor-skwasm.wasm',
-        'skwasm_heavy.js': 'editor-skwasm-heavy.js',
-        'skwasm_heavy.wasm': 'editor-skwasm-heavy.wasm',
-        'assets/FontManifest.json': 'editor-font-manifest.json',
-        'assets/AssetManifest.bin.json': 'editor-asset-manifest.json',
-        'assets/tee_black.png': 'editor-tee-black.png',
-        'assets/tee_white.png': 'editor-tee-white.png',
-        'assets/printora_logo.png': 'editor-printora-logo.png',
-        'assets/size_chart.png': 'editor-size-chart.png',
-        'assets/fonts/MaterialIcons-Regular.otf': 'editor-material-icons.otf',
-        'assets/shaders/ink_sparkle.frag': 'editor-ink-sparkle.frag',
-        'assets/shaders/stretch_effect.frag': 'editor-stretch-effect.frag',
-        'assets/packages/cupertino_icons/assets/CupertinoIcons.ttf': 'editor-cupertino-icons.ttf',
-        'icon-192.png': 'editor-icon-192.png',
-        'icon-512.png': 'editor-icon-512.png',
-        'icon-maskable-192.png': 'editor-icon-maskable-192.png',
-        'icon-maskable-192.png': 'editor-icon-maskable-192.png',
-        'icon-maskable-512.png': 'editor-icon-maskable-512.png',
-        'icon-maskable-512.png': 'editor-icon-maskable-512.png',
-        'favicon.png': 'editor-favicon.png',
-        'manifest.json': 'editor-manifest.json'
-      };
-      
-      // Helper function to rewrite resource paths
-      function rewriteResourcePath(url) {
-        if (!url || typeof url !== 'string') return url;
-        
-        // Skip if already has editor- prefix
-        if (url.includes('editor-')) return url;
-        
-        // Handle absolute URLs (including CDN paths)
-        if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
-          try {
-            const urlObj = new URL(url, window.location.origin);
-            
-            // CRITICAL: Skip external domains (like gstatic.com) - don't rewrite external URLs
-            const currentHost = window.location.hostname;
-            const urlHost = urlObj.hostname;
-            if (urlHost !== currentHost && urlHost !== '127.0.0.1' && urlHost !== 'localhost') {
-              // External URL - don't rewrite
-              return url;
-            }
-            
-            const pathname = urlObj.pathname;
-            
-            // Extract filename from pathname
-            const pathParts = pathname.split('/').filter(p => p);
-            const filename = pathParts[pathParts.length - 1];
-            
-            // Check if this filename needs mapping
-            for (const [originalPath, mappedPath] of Object.entries(resourceMap)) {
-              const originalFilename = originalPath.split('/').pop();
-              const mappedFilename = mappedPath.split('/').pop();
-              
-              // Match by filename (most reliable)
-              if (filename === originalFilename && !url.includes('editor-')) {
-                // Replace the filename in the path
-                const newPathname = pathname.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
-                urlObj.pathname = newPathname;
-                const rewritten = urlObj.toString();
-                console.log('Rewriting absolute URL:', url, '->', rewritten);
-                return rewritten;
+            try {
+              const urlObj = new URL(url, window.location.origin);
+              queryString = urlObj.search;
+            } catch (e) {
+              const queryIndex = url.indexOf('?');
+              if (queryIndex !== -1) {
+                queryString = url.substring(queryIndex);
               }
             }
-          } catch (e) {
-            console.warn('Error parsing URL:', url, e);
-          }
-          return url;
-        }
-        
-        // Handle relative paths (including those resolved by base href)
-        // First, try to resolve relative URL to see the actual path
-        try {
-          const resolvedUrl = new URL(url, document.baseURI || window.location.href);
-          const pathname = resolvedUrl.pathname;
-          const filename = pathname.split('/').pop();
-          
-          // Check if filename needs mapping
-          for (const [originalPath, mappedPath] of Object.entries(resourceMap)) {
-            const originalFilename = originalPath.split('/').pop();
-            const mappedFilename = mappedPath.split('/').pop();
-            
-            if (filename === originalFilename && !url.includes('editor-')) {
-              // Handle assets/ prefix removal: if original path has assets/ but mapped doesn't,
-              // remove assets/ from the URL before replacing
-              let newUrl = url;
-              
-              // If original path starts with "assets/" but mapped path doesn't, remove "assets/" prefix
-              if (originalPath.startsWith('assets/') && !mappedPath.startsWith('assets/')) {
-                // Remove "assets/" prefix from URL if present
-                newUrl = newUrl.replace(/^assets\//, '').replace(/\/assets\//, '/');
-              }
-              
-              // Replace filename
-              newUrl = newUrl.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
-              console.log('Rewriting relative URL:', url, '->', newUrl);
-              return newUrl;
-            }
-          }
-        } catch (e) {
-          // Fallback to string matching
-        }
-        
-        // Fallback: direct string matching for relative paths
-        for (const [originalPath, mappedPath] of Object.entries(resourceMap)) {
-          // Match the path (with or without leading slash, with or without query params)
-          if (url.includes(originalPath) && !url.includes('editor-')) {
-            let newUrl = url;
-            
-            // Handle assets/ prefix removal
-            if (originalPath.startsWith('assets/') && !mappedPath.startsWith('assets/')) {
-              // Remove "assets/" prefix from URL if present
-              newUrl = newUrl.replace(/^assets\//, '').replace(/\/assets\//, '/');
-            }
-            
-            newUrl = newUrl.replace(originalPath, mappedPath);
-            console.log('Rewriting resource path (fallback):', url, '->', newUrl);
-            return newUrl;
           }
           
-          // Also try matching just the filename
-          const originalFilename = originalPath.split('/').pop();
-          const mappedFilename = mappedPath.split('/').pop();
-          if (url.endsWith(originalFilename) || url.includes('/' + originalFilename) && !url.includes('editor-')) {
-            let newUrl = url;
-            
-            // Handle assets/ prefix removal for filename-only matches
-            if (originalPath.startsWith('assets/') && !mappedPath.startsWith('assets/')) {
-              newUrl = newUrl.replace(/^assets\//, '').replace(/\/assets\//, '/');
-            }
-            
-            newUrl = newUrl.replace(new RegExp(originalFilename + '(\\?|$|#)', 'g'), mappedFilename + '$1');
-            console.log('Rewriting filename (fallback):', url, '->', newUrl);
-            return newUrl;
+          const targetUrl = '/pages/order-summary' + queryString;
+          
+          console.log('=== CHECKOUT NAVIGATION INTERCEPTED ===');
+          console.log('📍 原始 URL:', url);
+          console.log('🎯 目標 URL:', targetUrl);
+          console.log('📋 Query 參數:', queryString);
+          
+          if (DEBUG_MODE) {
+            console.log('🚫 DEBUG MODE: 已阻止導航（僅記錄日誌）');
+            return window.location.href; // Return current URL to prevent navigation
+          } else {
+            console.log('✅ 導航到:', targetUrl);
+            return targetUrl;
           }
         }
-        
         return url;
       }
       
-      // Intercept fetch requests - MUST be set up early
-      const originalFetch = window.fetch;
-      window.fetch = function(input, init) {
-        if (typeof input === 'string') {
-          const rewritten = rewriteResourcePath(input);
-          if (rewritten !== input) {
-            return originalFetch.call(this, rewritten, init);
-          }
-        } else if (input && typeof input === 'object' && input.url) {
-          const rewritten = rewriteResourcePath(input.url);
-          if (rewritten !== input.url) {
-            return originalFetch.call(this, { ...input, url: rewritten }, init);
-          }
-        }
-        return originalFetch.call(this, input, init);
-      };
-      
-      // Intercept XMLHttpRequest
-      const originalXHROpen = XMLHttpRequest.prototype.open;
-      XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-        const rewritten = rewriteResourcePath(url);
-        return originalXHROpen.call(this, method, rewritten, ...rest);
-      };
-      
-      // Intercept Service Worker registration (critical for flutter_service_worker.js)
-      const originalServiceWorkerRegister = navigator.serviceWorker.register.bind(navigator.serviceWorker);
-      if (navigator.serviceWorker && navigator.serviceWorker.register) {
-        navigator.serviceWorker.register = function(scriptURL, options) {
-          if (typeof scriptURL === 'string') {
-            const rewritten = rewriteResourcePath(scriptURL);
-            if (rewritten !== scriptURL) {
-              console.log('Rewriting Service Worker URL:', scriptURL, '->', rewritten);
-              return originalServiceWorkerRegister(rewritten, options);
-            }
-          }
-          return originalServiceWorkerRegister(scriptURL, options);
-        };
-      }
-      
-      // Intercept script tag creation
-      const originalCreateElement = document.createElement.bind(document);
-      document.createElement = function(tagName, options) {
-        const element = originalCreateElement(tagName, options);
-        if (tagName.toLowerCase() === 'script') {
-          // Intercept setAttribute
-          const originalSetAttribute = element.setAttribute.bind(element);
-          element.setAttribute = function(name, value) {
-            if (name === 'src' && typeof value === 'string') {
-              const rewritten = rewriteResourcePath(value);
-              return originalSetAttribute('src', rewritten);
-            }
-            return originalSetAttribute(name, value);
-          };
-          
-          // Intercept src property setter
-          let srcValue = '';
-          Object.defineProperty(element, 'src', {
-            set: function(value) {
-              srcValue = value;
-              const rewritten = rewriteResourcePath(value);
-              element.setAttribute('src', rewritten);
-            },
-            get: function() {
-              return element.getAttribute('src') || srcValue;
-            },
-            configurable: true,
-            enumerable: true
-          });
-        }
-        return element;
-      };
-      
-      // Debug: Log base href
-      const baseElement = document.querySelector('base');
-      if (baseElement) {
-        console.log('Flutter base href:', baseElement.href);
-      }
-      
-      // Intercept navigation to order-summary page
-      // ALWAYS redirect to /pages/order-summary (both local dev and production)
-      // Flutter app may try to navigate to /assets/order-summary.html in local dev
-      // We'll intercept and ALWAYS redirect to /pages/order-summary
-      (function() {
-        // DEBUG MODE: Set to true to prevent navigation and only log
-        const DEBUG_MODE = true; // Change to false to enable actual navigation
+      // Intercept location.href
+      try {
+        const locationDescriptor = Object.getOwnPropertyDescriptor(window.location, 'href') || 
+                                   Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'href');
         
-        // Function to rewrite order-summary URLs - ALWAYS use /pages/order-summary
-        function rewriteOrderSummaryUrl(url) {
-          if (typeof url !== 'string') return url;
-          
-          // Check if it's trying to navigate to order-summary (any path)
-          if (url.includes('order-summary') || url.includes('order_summary')) {
-            // Extract query parameters
-            let queryString = '';
-            if (url.includes('?')) {
-              queryString = url.substring(url.indexOf('?'));
-            } else {
-              // Try to parse as URL
-              try {
-                const urlObj = new URL(url, window.location.origin);
-                queryString = urlObj.search;
-              } catch (e) {
-                // If parsing fails, check if it's a relative path with query
-                const queryIndex = url.indexOf('?');
-                if (queryIndex !== -1) {
-                  queryString = url.substring(queryIndex);
-                }
-              }
-            }
-            
-            // ALWAYS redirect to /pages/order-summary with same parameters
-            // This works for both local dev and production
-            const targetUrl = '/pages/order-summary' + queryString;
-            
-            console.log('=== CHECKOUT NAVIGATION INTERCEPTED ===');
-            console.log('📍 原始 URL:', url);
-            console.log('🎯 目標 URL:', targetUrl);
-            console.log('📋 Query 參數:', queryString);
-            
-            if (DEBUG_MODE) {
-              console.log('🚫 DEBUG MODE: 已阻止導航（僅記錄日誌）');
-              // Return current URL to prevent navigation
-              return window.location.href;
-            } else {
-              console.log('✅ 導航到:', targetUrl);
-              return targetUrl;
-            }
-          }
-          return url;
-        }
-        
-        // Method 1: Intercept location.href setter (most common)
-        // Skip if already intercepted by the IMMEDIATE interceptor
-        try {
-          const locationDescriptor = Object.getOwnPropertyDescriptor(window.location, 'href') || 
-                                     Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'href');
-          
-          // Always try to intercept - don't skip
-          if (locationDescriptor && locationDescriptor.set) {
+        if (locationDescriptor && locationDescriptor.set) {
+          if (locationDescriptor.configurable === false) {
+            console.log('[INTERCEPTOR] location.href is not configurable, will try later');
+          } else {
             const originalSetter = locationDescriptor.set;
             
             try {
               Object.defineProperty(window.location, 'href', {
                 set: function(value) {
-                  console.log('[SECOND] location.href setter called with:', value);
+                  console.log('[INTERCEPTOR] location.href setter called with:', value);
                   const rewritten = rewriteOrderSummaryUrl(value);
                   if (rewritten !== value) {
-                    console.log('[SECOND] URL rewritten from', value, 'to', rewritten);
+                    console.log('[INTERCEPTOR] URL rewritten from', value, 'to', rewritten);
                   }
-                  // In DEBUG_MODE, don't call originalSetter - this prevents navigation
                   if (!DEBUG_MODE) {
                     originalSetter.call(window.location, rewritten);
                   } else {
-                    console.log('[SECOND] DEBUG MODE: Navigation blocked');
+                    console.log('[INTERCEPTOR] DEBUG MODE: Navigation blocked');
                   }
                 },
                 get: function() {
@@ -481,153 +193,188 @@
                 configurable: true,
                 enumerable: true
               });
-              console.log('[SECOND] Navigation interceptor (location.href) installed successfully');
+              console.log('[INTERCEPTOR] Checkout navigation interceptor installed (location.href)');
             } catch (defineError) {
-              // If already defined, it means another interceptor already set it
               if (defineError.message && defineError.message.includes('Cannot redefine property')) {
-                console.log('[SECOND] location.href already intercepted by first interceptor, that\'s OK');
+                console.log('[INTERCEPTOR] location.href already intercepted');
               } else {
-                console.warn('[SECOND] Failed to install location.href interceptor:', defineError);
+                console.warn('[INTERCEPTOR] Failed to intercept location.href:', defineError);
               }
             }
           }
-        } catch (e) {
-          // If error is "Cannot redefine property", it means already intercepted
-          if (e.message && e.message.includes('Cannot redefine property')) {
-            console.log('Navigation interceptor (location.href) already installed, skipping duplicate');
-          } else {
-            console.warn('Failed to intercept location.href:', e);
-          }
         }
-        
-        // Method 2: Intercept window.location assignment (backup)
-        // Skip if already intercepted by the IMMEDIATE interceptor
-        try {
-          const windowLocationDescriptor = Object.getOwnPropertyDescriptor(window, 'location');
-          // Always try to intercept - don't skip
-          if (windowLocationDescriptor && windowLocationDescriptor.set) {
-            const originalWindowLocationSetter = windowLocationDescriptor.set;
-            Object.defineProperty(window, 'location', {
-              set: function(value) {
-                console.log('[SECOND] window.location setter called with:', value);
-                const rewritten = rewriteOrderSummaryUrl(value);
-                if (rewritten !== value) {
-                  console.log('[SECOND] window.location URL rewritten from', value, 'to', rewritten);
-                }
-                // In DEBUG_MODE, don't call originalWindowLocationSetter - this prevents navigation
-                if (!DEBUG_MODE) {
-                  originalWindowLocationSetter.call(window, rewritten);
-                } else {
-                  console.log('[SECOND] DEBUG MODE: window.location navigation blocked');
-                }
-              },
-              get: function() {
-                return window.location;
-              },
-              configurable: true,
-              enumerable: true
-            });
-            console.log('Navigation interceptor (window.location) installed');
-          }
-        } catch (e) {
-          // If error is "Cannot redefine property", it means already intercepted
-          if (e.message && e.message.includes('Cannot redefine property')) {
-            console.log('Navigation interceptor (window.location) already installed, skipping duplicate');
-          } else {
-            console.warn('Failed to intercept window.location:', e);
-          }
+      } catch (e) {
+        if (e.message && e.message.includes('Cannot redefine property')) {
+          console.log('[INTERCEPTOR] location.href already intercepted by another script');
+        } else {
+          console.warn('[INTERCEPTOR] Failed to intercept location.href:', e);
         }
-        
-        // Method 3: Use beforeunload as fallback (monitor navigation)
-        window.addEventListener('beforeunload', function(e) {
-          const currentHref = window.location.href;
-          if (currentHref.includes('order-summary') || currentHref.includes('order_summary')) {
-            if (currentHref.includes('/assets/order-summary.html')) {
-              // Extract query parameters
-              const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
-              const targetUrl = '/pages/order-summary' + queryString;
-              console.log('beforeunload: Redirecting to', targetUrl);
-              // Note: beforeunload doesn't allow navigation, but we can use it for logging
-            }
-          }
-        });
-        
-        // Method 4: Intercept history.pushState and history.replaceState
-        const originalPushState = history.pushState;
-        const originalReplaceState = history.replaceState;
-        
-        history.pushState = function(...args) {
-          if (args.length > 2 && typeof args[2] === 'string') {
-            const rewritten = rewriteOrderSummaryUrl(args[2]);
-            if (rewritten !== args[2]) {
-              args[2] = rewritten;
-              console.log('Intercepted history.pushState:', args[2]);
-            }
-          }
-          return originalPushState.apply(history, args);
-        };
-        
-        history.replaceState = function(...args) {
-          if (args.length > 2 && typeof args[2] === 'string') {
-            const rewritten = rewriteOrderSummaryUrl(args[2]);
-            if (rewritten !== args[2]) {
-              args[2] = rewritten;
-              console.log('Intercepted history.replaceState:', args[2]);
-            }
-          }
-          return originalReplaceState.apply(history, args);
-        };
-        
-        // Method 5: Monitor popstate events (for browser back/forward)
-        window.addEventListener('popstate', function(e) {
-          const currentHref = window.location.href;
-          if (currentHref.includes('/assets/order-summary.html')) {
-            const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
-            const targetUrl = '/pages/order-summary' + queryString;
-            console.log('popstate: Redirecting to', targetUrl);
-            
-            if (DEBUG_MODE) {
-              console.log('🚫 DEBUG MODE: 已阻止 popstate 導航（僅記錄日誌）');
-            } else {
-              window.location.href = targetUrl;
-            }
-          }
-        });
-        
-        // Method 6: Periodic check as last resort (check every 50ms for faster response)
-        let lastHref = window.location.href;
-        const checkInterval = setInterval(function() {
-          const currentHref = window.location.href;
-          if (currentHref !== lastHref) {
-            lastHref = currentHref;
-            // Check for ANY order-summary path that's NOT /pages/order-summary
-            // This ensures we redirect /assets/order-summary.html or any other path to /pages/order-summary
-            if ((currentHref.includes('order-summary') || currentHref.includes('order_summary')) && 
-                !currentHref.includes('/pages/order-summary')) {
-              const queryString = currentHref.includes('?') ? currentHref.substring(currentHref.indexOf('?')) : '';
-              const targetUrl = '/pages/order-summary' + queryString;
-              console.log('Periodic check: Redirecting from', currentHref, 'to', targetUrl);
-              
-              if (DEBUG_MODE) {
-                console.log('🚫 DEBUG MODE: 已阻止週期檢查的導航（僅記錄日誌）');
-                // Don't navigate in debug mode
-              } else {
-                clearInterval(checkInterval); // Stop checking after redirect
-                window.location.replace(targetUrl);
-              }
-            }
-          }
-        }, 50); // Check every 50ms for faster response
-        
-        console.log('Checkout navigation interceptor installed - ALWAYS redirects to /pages/order-summary (both local and production)');
-      })();
-      
-      console.log('Resource path rewriting initialized');
+      }
     })();
   </script>
 </head>
-<body>
-  <script src="{{ 'editor-flutter_bootstrap.js' | asset_url }}" async></script>
+<body class="editor-page-body">
+  <!-- Header -->
+  <header class="fixed top-0 w-full bg-mint z-50">
+    <div class="max-w-7xl mx-auto px-8 py-6">
+      <div class="flex items-center justify-between">
+        <!-- Left side: Back button and Logo -->
+        <div class="flex items-center">
+          <!-- Back Button -->
+          <button class="header__back-button" id="backButton" aria-label="返回首頁">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          
+          <!-- Logo -->
+          <div class="header__logo">
+            <a href="/">
+              <img
+                src="{{ 'printora_logo.png' | asset_url }}"
+                alt="PrintOra"
+                class="header__logo-image"
+                loading="eager"
+              >
+            </a>
+          </div>
+        </div>
+        
+        <!-- Navigation (hidden on editor page) -->
+        <nav class="hidden">
+          <a href="/" class="header-nav-link">Home</a>
+          <a href="/#pricing-cards" class="header-nav-link">Pricing</a>
+          <a href="/#features" class="header-nav-link">Why Us</a>
+          <a href="/#contact" class="header-nav-link">Contact</a>
+        </nav>
+        
+        <!-- Cart Icon (hidden on editor page) -->
+        <div class="hidden header__cart">
+          <img
+            src="{{ 'shopping_car.png' | asset_url }}"
+            alt="Shopping Cart"
+            class="header__cart-image"
+            loading="eager"
+          >
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="editor-page" style="padding-top: 120px;">
+    <div class="editor-container">
+      <!-- Left side - Preview area -->
+      <div class="editor-preview-section">
+        <div class="preview-wrapper">
+          <canvas id="tshirtCanvas"></canvas>
+          <!-- Reset Rotation Button - positioned at top-left of preview area -->
+          <button class="reset-rotation-btn" id="resetRotationBtn" style="display: none;">Reset Rotation</button>
+          <div id="uploadOverlay" class="upload-overlay">
+            <label for="imageUpload" class="upload-button">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              Upload Your Design
+            </label>
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side - Controls -->
+      <div class="editor-controls-section">
+        <div class="price-display">
+          <div class="price-amount" id="priceDisplay">
+            <span class="price-value">$45.00</span>
+            <span class="price-note">(Price per T-Shirt)</span>
+          </div>
+        </div>
+
+        <!-- Print Size Selection -->
+        <div class="control-group">
+          <h3 class="control-title">Print Size</h3>
+          <div class="print-size-buttons">
+            <button class="print-size-btn" data-size="small">Small Logo</button>
+            <button class="print-size-btn" data-size="standard">Standard Print</button>
+            <button class="print-size-btn active" data-size="large">Large Print</button>
+          </div>
+        </div>
+
+        <!-- Size Selection -->
+        <div class="control-group">
+          <div class="size-header">
+            <h3 class="control-title">Size: <span id="selectedSize">L</span></h3>
+            <button class="size-chart-btn" id="sizeChartBtn">Size Chart</button>
+          </div>
+          <div class="size-buttons">
+            <button class="size-btn" data-size="S">S</button>
+            <button class="size-btn" data-size="M">M</button>
+            <button class="size-btn" data-size="L">L</button>
+            <button class="size-btn" data-size="XL">XL</button>
+            <button class="size-btn" data-size="2XL">2XL</button>
+            <button class="size-btn" data-size="3XL">3XL</button>
+          </div>
+        </div>
+
+        <!-- Color Selection -->
+        <div class="control-group">
+          <h3 class="control-title">Color: <span id="selectedColor">Black</span></h3>
+          <div class="color-buttons">
+            <button class="color-btn active" data-color="black">
+              <div class="color-swatch black"></div>
+            </button>
+            <button class="color-btn" data-color="white">
+              <div class="color-swatch white"></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quantity Selector -->
+        <div class="control-group">
+          <h3 class="control-title">Quantity</h3>
+          <div class="quantity-selector">
+            <button id="decrementBtn" class="quantity-btn">-</button>
+            <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" max="100">
+            <button id="incrementBtn" class="quantity-btn">+</button>
+          </div>
+        </div>
+
+        <!-- Checkout Button -->
+        <button class="checkout-btn" id="checkoutBtn">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Size Chart Modal -->
+  <div id="sizeChartModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <h2>T-Shirt Size Chart</h2>
+      <img src="{{ 'editor-size-chart.png' | asset_url }}" alt="Size Chart">
+    </div>
+  </div>
+
+  <!-- Upload Image Dialog -->
+  <div id="uploadImageDialog" class="dialog">
+    <div class="dialog-content">
+      <div class="dialog-icon">📷</div>
+      <h3 class="dialog-title">Please Upload an Image</h3>
+      <p class="dialog-message">You need to upload an image before proceeding to checkout.</p>
+      <button class="dialog-button" id="uploadImageDialogClose">OK</button>
+    </div>
+  </div>
+
+  <script src="{{ 'editor.js' | asset_url }}" defer></script>
+  <script>
+    // Back button handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const backButton = document.getElementById('backButton');
+      if (backButton) {
+        backButton.addEventListener('click', function() {
+          window.location.href = '/';
+        });
+      }
+    });
+  </script>
 </body>
 </html>
-

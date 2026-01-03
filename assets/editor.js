@@ -7,7 +7,7 @@ class TshirtEditor {
   constructor() {
     // State
     this.tshirtColor = 'black';
-    this.size = 'M';
+    this.size = 'L';
     this.quantity = 1;
     this.printSize = 'large';
     this.price = 45.0;
@@ -28,18 +28,24 @@ class TshirtEditor {
     this.canvasHeight = 0;
     
     // Editable area ratios (from Flutter constants)
-    this.editableAreaWidthRatio = 0.3;
-    this.editableAreaHeightRatio = 0.7;
-    this.editableAreaVerticalOffsetRatio = 0.04;
+    // These should match the Flutter implementation
+    this.editableAreaWidthRatio = 0.4;  // 30% of canvas width (half-width from center)
+    this.editableAreaHeightRatio = 0.7;  // 70% of canvas height (half-height from center)
+    this.editableAreaVerticalOffsetRatio = 0.04; // 4% vertical offset
     
     // Interaction state
-    this.isDragging = false;
+    this.isDragging = false; // Track if currently dragging
     this.isScaling = false;
     this.activeCorner = null;
-    this.lastTouchDistance = 0;
-    this.lastTouchAngle = 0;
-    this.initialTouchCenter = null;
     this.initialImageState = null;
+    this.renderScheduled = false; // For requestAnimationFrame optimization
+    this.isImageSelected = false; // Track if image is selected (for showing border)
+    this.gestureState = {
+      scale: 1.0,
+      rotation: 0.0,
+      initialScale: 1.0,
+      initialRotation: 0.0
+    };
     
     // Initialize
     this.init();
@@ -57,6 +63,9 @@ class TshirtEditor {
     
     // Setup canvas
     this.setupCanvas();
+    
+    // Initialize size display (ensure L button is active)
+    this.setSize(this.size);
   }
   
   loadUrlParameters() {
@@ -184,17 +193,63 @@ class TshirtEditor {
     
     // Quantity buttons
     document.getElementById('incrementBtn').addEventListener('click', () => {
-      this.setQuantity(Math.min(this.quantity + 1, 300));
+      this.setQuantity(Math.min(this.quantity + 1, 100));
     });
     
     document.getElementById('decrementBtn').addEventListener('click', () => {
       this.setQuantity(Math.max(this.quantity - 1, 1));
     });
     
+    // Quantity input validation
+    const quantityInput = document.getElementById('quantityInput');
+    quantityInput.addEventListener('input', (e) => {
+      let value = parseInt(e.target.value);
+      if (isNaN(value) || value < 1) {
+        value = 1;
+      } else if (value > 100) {
+        value = 100;
+      }
+      // Update input value immediately if it was changed
+      if (e.target.value !== value.toString()) {
+        e.target.value = value;
+      }
+      this.setQuantity(value);
+    });
+    
+    quantityInput.addEventListener('blur', (e) => {
+      let value = parseInt(e.target.value);
+      if (isNaN(value) || value < 1) {
+        value = 1;
+      } else if (value > 100) {
+        value = 100;
+      }
+      e.target.value = value;
+      this.setQuantity(value);
+    });
+    
+    // Also prevent invalid input on keydown
+    quantityInput.addEventListener('keydown', (e) => {
+      // Allow: backspace, delete, tab, escape, enter, and decimal point
+      if ([46, 8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 ||
+          // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+          (e.keyCode === 65 && e.ctrlKey === true) ||
+          (e.keyCode === 67 && e.ctrlKey === true) ||
+          (e.keyCode === 86 && e.ctrlKey === true) ||
+          (e.keyCode === 88 && e.ctrlKey === true) ||
+          // Allow: home, end, left, right
+          (e.keyCode >= 35 && e.keyCode <= 39)) {
+        return;
+      }
+      // Ensure that it is a number and stop the keypress if it's not
+      if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+        e.preventDefault();
+      }
+    });
+    
     // Reset rotation button
     document.getElementById('resetRotationBtn').addEventListener('click', () => {
       this.imageRotation = 0;
-      document.getElementById('resetRotationGroup').style.display = 'none';
+      document.getElementById('resetRotationBtn').style.display = 'none';
       this.render();
     });
     
@@ -202,6 +257,24 @@ class TshirtEditor {
     document.getElementById('checkoutBtn').addEventListener('click', () => {
       this.checkout();
     });
+    
+    // Upload image dialog close button
+    const uploadImageDialogClose = document.getElementById('uploadImageDialogClose');
+    if (uploadImageDialogClose) {
+      uploadImageDialogClose.addEventListener('click', () => {
+        this.hideUploadImageDialog();
+      });
+    }
+    
+    // Close dialog when clicking outside
+    const uploadImageDialog = document.getElementById('uploadImageDialog');
+    if (uploadImageDialog) {
+      uploadImageDialog.addEventListener('click', (e) => {
+        if (e.target === uploadImageDialog) {
+          this.hideUploadImageDialog();
+        }
+      });
+    }
     
     // Size chart modal
     const sizeChartBtn = document.getElementById('sizeChartBtn');
@@ -224,107 +297,228 @@ class TshirtEditor {
     
     // Canvas interactions
     this.setupCanvasInteractions();
+    
+    // Canvas click handler for showing/hiding image border
+    this.setupCanvasClickHandler();
+  }
+  
+  setupCanvasClickHandler() {
+    // Handle clicks on canvas to show/hide image border
+    this.canvas.addEventListener('click', (e) => {
+      if (!this.userImage) return;
+      
+      // Prevent event if it's part of a drag operation
+      if (this.isDragging || this.isScaling) return;
+      
+      const rect = this.canvas.getBoundingClientRect();
+      const point = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      
+      // Check if click is on a corner handle - if so, don't change selection
+      const corner = this.getCornerAtPoint(point);
+      if (corner) {
+        return; // Keep selection when clicking on corner
+      }
+      
+      // Check if click is on image
+      const isOnImage = this.isPointInImage(point);
+      
+      if (isOnImage) {
+        // Click on image - show border
+        this.isImageSelected = true;
+      } else {
+        // Click outside image - hide border
+        this.isImageSelected = false;
+      }
+      
+      // Re-render to update border visibility
+      this.render();
+    });
   }
   
   setupCanvasInteractions() {
-    // Mouse events
-    this.canvas.addEventListener('mousedown', (e) => this.onPointerDown(e));
-    this.canvas.addEventListener('mousemove', (e) => this.onPointerMove(e));
-    this.canvas.addEventListener('mouseup', (e) => this.onPointerUp(e));
-    this.canvas.addEventListener('mouseleave', (e) => this.onPointerUp(e));
+    // Use interact.js for unified touch and mouse handling
+    // Reference: https://interactjs.io/
     
-    // Touch events
-    this.canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      this.onTouchStart(e);
-    });
-    this.canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      this.onTouchMove(e);
-    });
-    this.canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      this.onTouchEnd(e);
-    });
-  }
-  
-  onPointerDown(e) {
-    if (!this.userImage) return;
+    // Setup draggable for single finger/mouse drag
+    interact(this.canvas)
+      .draggable({
+        enabled: () => this.userImage !== null && !this.isScaling,
+        listeners: {
+          start: (event) => {
+            // Check if click is on image
+            const rect = this.canvas.getBoundingClientRect();
+            const point = {
+              x: event.client.x - rect.left,
+              y: event.client.y - rect.top
+            };
+            
+            // Check if click is on a corner handle - if so, prevent drag
+            const corner = this.getCornerAtPoint(point);
+            if (corner) {
+              // Corner handles are handled separately, prevent interact.js drag
+              event.preventDefault();
+              return;
+            }
+            
+            // Check if started on image
+            const isOnImage = this.isPointInImage(point);
+            this.isImageSelected = isOnImage;
+            if (isOnImage) {
+              this.isDragging = true; // Mark as dragging
+              this.initialImageState = {
+                x: this.imageX,
+                y: this.imageY
+              };
+            } else {
+              // Not on image, prevent drag
+              event.preventDefault();
+            }
+          },
+          move: (event) => {
+            if (!this.userImage || this.isScaling || !this.initialImageState) return;
+            
+            // Apply delta to current position
+            const deltaX = event.dx;
+            const deltaY = event.dy;
+            
+            let newX = this.initialImageState.x + deltaX;
+            let newY = this.initialImageState.y + deltaY;
+            
+            // Constrain to editable area
+            const constrained = this.constrainPosition(newX, newY);
+            this.imageX = constrained.x;
+            this.imageY = constrained.y;
+            
+            // Update initial state for next frame (for smooth dragging)
+            this.initialImageState.x = this.imageX;
+            this.initialImageState.y = this.imageY;
+            
+            // Render
+            if (!this.renderScheduled) {
+              this.renderScheduled = true;
+              requestAnimationFrame(() => {
+                this.render();
+                this.renderScheduled = false;
+              });
+            }
+          },
+          end: (event) => {
+            this.isDragging = false; // Reset dragging state
+            this.initialImageState = null;
+            // After drag ends, ensure image is still selected if it was being dragged
+            if (this.userImage) {
+              this.isImageSelected = true;
+              this.render();
+            }
+          }
+        }
+      })
+      .gesturable({
+        enabled: () => this.userImage !== null,
+        listeners: {
+          start: (event) => {
+            // Store initial gesture state
+            this.gestureState.scale = this.imageScale;
+            this.gestureState.rotation = this.imageRotation;
+            this.gestureState.initialScale = event.scale;
+            this.gestureState.initialRotation = event.angle;
+          },
+          move: (event) => {
+            if (!this.userImage) return;
+            
+            // Calculate new scale from gesture scale
+            // event.scale is cumulative from start of gesture (starts at 1.0)
+            let newScale = this.gestureState.scale * event.scale;
+            
+            // Apply print size limit (large print now has limits too)
+            const maxImageWidth = this.getMaxImageWidth(this.printSize);
+            const maxImageHeight = this.getMaxImageHeight(this.printSize);
+            
+            const imageWidth = this.userImage.width;
+            const imageHeight = this.userImage.height;
+            
+            // Calculate maximum scale based on print size limit
+            const maxScaleX = maxImageWidth / imageWidth;
+            const maxScaleY = maxImageHeight / imageHeight;
+            const maxScale = Math.min(maxScaleX, maxScaleY);
+            
+            // Clamp scale: minimum and maximum based on print size limit
+            // For small logo: max is 100x100, min is 30x30 (absolute limits, not relative to original)
+            // Example: if original is 1000x1000, maxScale = 0.1 (100/1000), minScale = 0.03 (30/1000)
+            // Example: if original is 100x100, maxScale = 1.0 (100/100), minScale = 0.3 (30/100)
+            const minImageWidth = this.getMinImageWidth(this.printSize);
+            const minImageHeight = this.getMinImageHeight(this.printSize);
+            
+            let minScale;
+            if (minImageWidth !== null && minImageHeight !== null) {
+              // For small logo: calculate minScale based on absolute 30x30 limit
+              const minScaleX = minImageWidth / imageWidth;
+              const minScaleY = minImageHeight / imageHeight;
+              minScale = Math.max(minScaleX, minScaleY); // Use larger scale to ensure both dimensions are at least 30px
+            } else {
+              // For other sizes: use 0.1 as minimum scale
+              minScale = 0.1;
+            }
+            
+            // Apply both min and max limits
+            // Ensure minScale is less than maxScale to allow scaling
+            if (minScale >= maxScale) {
+              // If minScale >= maxScale, allow scaling between minScale and a slightly larger value
+              // This ensures users can still scale down from current scale
+              const effectiveMaxScale = minScale * 1.1; // Allow 10% above minScale
+              newScale = Math.max(minScale, Math.min(newScale, effectiveMaxScale));
+            } else {
+              newScale = Math.max(minScale, Math.min(newScale, maxScale));
+            }
+            
+            this.imageScale = newScale;
+            
+            // Calculate rotation
+            // event.angle is in degrees, cumulative from start of gesture
+            // Convert to radians and calculate delta
+            const angleDeltaDeg = event.angle - this.gestureState.initialRotation;
+            let angleDeltaRad = (angleDeltaDeg * Math.PI) / 180;
+            // Normalize to [-π, π] range
+            while (angleDeltaRad > Math.PI) angleDeltaRad -= 2 * Math.PI;
+            while (angleDeltaRad < -Math.PI) angleDeltaRad += 2 * Math.PI;
+            
+            this.imageRotation = this.gestureState.rotation + angleDeltaRad;
+            
+            // Show reset rotation button if rotated
+            document.getElementById('resetRotationBtn').style.display = 
+              Math.abs(this.imageRotation) > 0.01 ? 'block' : 'none';
+            
+            // Render
+            if (!this.renderScheduled) {
+              this.renderScheduled = true;
+              requestAnimationFrame(() => {
+                this.render();
+                this.renderScheduled = false;
+              });
+            }
+          },
+          end: (event) => {
+            // Update gesture state for next gesture
+            this.gestureState.scale = this.imageScale;
+            this.gestureState.rotation = this.imageRotation;
+          }
+        }
+      });
     
-    const rect = this.canvas.getBoundingClientRect();
-    const point = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-    
-    // Check if click is on a corner handle
-    const corner = this.getCornerAtPoint(point);
-    if (corner) {
-      this.activeCorner = corner;
-      this.initialImageState = {
-        scale: this.imageScale,
-        rotation: this.imageRotation,
-        focalPoint: point
-      };
-      this.isScaling = true;
-    } else if (this.isPointInImage(point)) {
-      this.isDragging = true;
-      this.initialTouchCenter = point;
-      this.initialImageState = {
-        x: this.imageX,
-        y: this.imageY
-      };
-    }
-  }
-  
-  onPointerMove(e) {
-    if (!this.userImage) return;
-    
-    const rect = this.canvas.getBoundingClientRect();
-    const point = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-    
-    if (this.isDragging && this.initialImageState) {
-      const deltaX = point.x - this.initialTouchCenter.x;
-      const deltaY = point.y - this.initialTouchCenter.y;
-      
-      let newX = this.initialImageState.x + deltaX;
-      let newY = this.initialImageState.y + deltaY;
-      
-      // Constrain to editable area
-      const constrained = this.constrainPosition(newX, newY);
-      this.imageX = constrained.x;
-      this.imageY = constrained.y;
-      
-      this.render();
-    } else if (this.isScaling && this.activeCorner && this.initialImageState) {
-      this.handleCornerResize(point);
-    }
-  }
-  
-  onPointerUp(e) {
-    this.isDragging = false;
-    this.isScaling = false;
-    this.activeCorner = null;
-    this.initialTouchCenter = null;
-    this.initialImageState = null;
-  }
-  
-  onTouchStart(e) {
-    if (!this.userImage) return;
-    
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
+    // Handle corner resize separately (mouse/touch events for corner handles)
+    this.canvas.addEventListener('mousedown', (e) => {
+      if (!this.userImage) return;
       const rect = this.canvas.getBoundingClientRect();
       const point = {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
       };
-      
       const corner = this.getCornerAtPoint(point);
       if (corner) {
+        e.preventDefault();
         this.activeCorner = corner;
         this.initialImageState = {
           scale: this.imageScale,
@@ -332,120 +526,73 @@ class TshirtEditor {
           focalPoint: point
         };
         this.isScaling = true;
-      } else if (this.isPointInImage(point)) {
-        this.isDragging = true;
-        this.initialTouchCenter = point;
-        this.initialImageState = {
-          x: this.imageX,
-          y: this.imageY
-        };
+        this.isImageSelected = true;
       }
-    } else if (e.touches.length === 2) {
-      this.isDragging = false;
-      this.isScaling = true;
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      
-      const rect = this.canvas.getBoundingClientRect();
-      const point1 = {
-        x: touch1.clientX - rect.left,
-        y: touch1.clientY - rect.top
-      };
-      const point2 = {
-        x: touch2.clientX - rect.left,
-        y: touch2.clientY - rect.top
-      };
-      
-      const distance = this.getDistance(point1, point2);
-      const angle = Math.atan2(point2.y - point1.y, point2.x - point1.x);
-      const center = {
-        x: (point1.x + point2.x) / 2,
-        y: (point1.y + point2.y) / 2
-      };
-      
-      this.lastTouchDistance = distance;
-      this.lastTouchAngle = angle;
-      this.initialTouchCenter = center;
-      this.initialImageState = {
-        scale: this.imageScale,
-        rotation: this.imageRotation,
-        centerX: this.imageX,
-        centerY: this.imageY
-      };
-    }
-  }
-  
-  onTouchMove(e) {
-    if (!this.userImage) return;
+    });
     
-    e.preventDefault();
+    this.canvas.addEventListener('mousemove', (e) => {
+      if (this.isScaling && this.activeCorner && this.initialImageState) {
+        e.preventDefault();
+        const rect = this.canvas.getBoundingClientRect();
+        const point = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+        this.handleCornerResize(point);
+      }
+    });
     
-    if (e.touches.length === 1 && this.isDragging && this.initialImageState) {
+    this.canvas.addEventListener('mouseup', (e) => {
+      if (this.isScaling) {
+        this.isScaling = false;
+        this.activeCorner = null;
+        this.initialImageState = null;
+      }
+    });
+    
+    // Touch events for corner resize
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (!this.userImage || e.touches.length !== 1) return;
       const touch = e.touches[0];
       const rect = this.canvas.getBoundingClientRect();
       const point = {
         x: touch.clientX - rect.left,
         y: touch.clientY - rect.top
       };
-      
-      const deltaX = point.x - this.initialTouchCenter.x;
-      const deltaY = point.y - this.initialTouchCenter.y;
-      
-      let newX = this.initialImageState.x + deltaX;
-      let newY = this.initialImageState.y + deltaY;
-      
-      const constrained = this.constrainPosition(newX, newY);
-      this.imageX = constrained.x;
-      this.imageY = constrained.y;
-      
-      this.render();
-    } else if (e.touches.length === 2 && this.isScaling && this.initialImageState) {
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      
-      const rect = this.canvas.getBoundingClientRect();
-      const point1 = {
-        x: touch1.clientX - rect.left,
-        y: touch1.clientY - rect.top
-      };
-      const point2 = {
-        x: touch2.clientX - rect.left,
-        y: touch2.clientY - rect.top
-      };
-      
-      const distance = this.getDistance(point1, point2);
-      const angle = Math.atan2(point2.y - point1.y, point2.x - point1.x);
-      
-      // Scale
-      const scaleFactor = distance / this.lastTouchDistance;
-      let newScale = this.initialImageState.scale * scaleFactor;
-      newScale = Math.max(0.1, Math.min(3.0, newScale));
-      this.imageScale = newScale;
-      
-      // Rotation
-      const angleDelta = angle - this.lastTouchAngle;
-      this.imageRotation = this.initialImageState.rotation + angleDelta;
-      
-      this.render();
-    } else if (this.activeCorner && this.isScaling && this.initialImageState) {
-      const touch = e.touches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      const point = {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
-      this.handleCornerResize(point);
-    }
-  }
-  
-  onTouchEnd(e) {
-    this.isDragging = false;
-    this.isScaling = false;
-    this.activeCorner = null;
-    this.initialTouchCenter = null;
-    this.initialImageState = null;
-    this.lastTouchDistance = 0;
-    this.lastTouchAngle = 0;
+      const corner = this.getCornerAtPoint(point);
+      if (corner) {
+        e.preventDefault();
+        this.activeCorner = corner;
+        this.initialImageState = {
+          scale: this.imageScale,
+          rotation: this.imageRotation,
+          focalPoint: point
+        };
+        this.isScaling = true;
+        this.isImageSelected = true;
+      }
+    }, { passive: false });
+    
+    this.canvas.addEventListener('touchmove', (e) => {
+      if (this.isScaling && this.activeCorner && this.initialImageState && e.touches.length === 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = this.canvas.getBoundingClientRect();
+        const point = {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top
+        };
+        this.handleCornerResize(point);
+      }
+    }, { passive: false });
+    
+    this.canvas.addEventListener('touchend', (e) => {
+      if (this.isScaling) {
+        this.isScaling = false;
+        this.activeCorner = null;
+        this.initialImageState = null;
+      }
+    }, { passive: false });
   }
   
   getDistance(p1, p2) {
@@ -508,77 +655,419 @@ class TshirtEditor {
     return Math.abs(rotatedX) <= imageHalfWidth && Math.abs(rotatedY) <= imageHalfHeight;
   }
   
+  getMaxImageWidth(printSize) {
+    // This matches Flutter's _getMaxImageWidth - used for limiting manual scaling
+    switch (printSize) {
+      case 'small':
+        return 100.0;
+      case 'standard':
+        return 220.0;
+      case 'large':
+      default:
+        // Large print: limit to 90% of editable area width
+        if (this.canvasWidth > 0) {
+          return this.canvasWidth * this.editableAreaWidthRatio * 0.9;
+        }
+        return 300.0; // Fallback value
+    }
+  }
+  
+  getMaxImageHeight(printSize) {
+    // This matches Flutter's _getMaxImageHeight - used for limiting manual scaling
+    switch (printSize) {
+      case 'small':
+        return 100.0;
+      case 'standard':
+        return 200.0;
+      case 'large':
+      default:
+        // Large print: limit to 90% of editable area height
+        if (this.canvasHeight > 0) {
+          return this.canvasHeight * this.editableAreaHeightRatio * 0.9;
+        }
+        return 400.0; // Fallback value
+    }
+  }
+  
+  getMinImageWidth(printSize) {
+    // For small logo: minimum is 30x30 (absolute, not relative to original)
+    switch (printSize) {
+      case 'small':
+        return 30.0;
+      case 'standard':
+      case 'large':
+      default:
+        // For other sizes, use 0.1 as minimum scale (will be calculated relative to image)
+        return null; // Indicates to use 0.1 scale factor
+    }
+  }
+  
+  getMinImageHeight(printSize) {
+    // For small logo: minimum is 30x30 (absolute, not relative to original)
+    switch (printSize) {
+      case 'small':
+        return 30.0;
+      case 'standard':
+      case 'large':
+      default:
+        // For other sizes, use 0.1 as minimum scale (will be calculated relative to image)
+        return null; // Indicates to use 0.1 scale factor
+    }
+  }
+  
   handleCornerResize(currentPoint) {
+    // This matches Flutter's _handleCornerResize exactly (lines 104-155)
     if (!this.initialImageState || !this.userImage) return;
     
     const center = { x: this.imageX, y: this.imageY };
+    
+    // Calculate distance from center to initial and current points for scaling
     const initialDistance = this.getDistance(this.initialImageState.focalPoint, center);
     const currentDistance = this.getDistance(currentPoint, center);
     
+    // Calculate scale factor based on distance change
     if (initialDistance > 0) {
       const scaleFactor = currentDistance / initialDistance;
       let newScale = this.initialImageState.scale * scaleFactor;
-      newScale = Math.max(0.1, Math.min(3.0, newScale));
-      this.imageScale = newScale;
-      this.render();
+      
+      // Apply scale limit based on print size
+      const maxImageWidth = this.getMaxImageWidth(this.printSize);
+      const maxImageHeight = this.getMaxImageHeight(this.printSize);
+      
+      // Always apply limits (large print now has limits too)
+      const imageWidth = this.userImage.width;
+      const imageHeight = this.userImage.height;
+      
+      // Calculate maximum scale based on print size limit
+      const maxScaleX = maxImageWidth / imageWidth;
+      const maxScaleY = maxImageHeight / imageHeight;
+      const maxScale = Math.min(maxScaleX, maxScaleY);
+      
+      // Clamp scale: minimum and maximum based on print size limit
+      // For small logo: max is 100x100, min is 30x30 (absolute limits, not relative to original)
+      // Example: if original is 1000x1000, maxScale = 0.1 (100/1000), minScale = 0.03 (30/1000)
+      // Example: if original is 100x100, maxScale = 1.0 (100/100), minScale = 0.3 (30/100)
+      const minImageWidth = this.getMinImageWidth(this.printSize);
+      const minImageHeight = this.getMinImageHeight(this.printSize);
+      
+      let minScale;
+      if (minImageWidth !== null && minImageHeight !== null) {
+        // For small logo: calculate minScale based on absolute 30x30 limit
+        const minScaleX = minImageWidth / imageWidth;
+        const minScaleY = minImageHeight / imageHeight;
+        minScale = Math.max(minScaleX, minScaleY); // Use larger scale to ensure both dimensions are at least 30px
+      } else {
+        // For other sizes: use 0.1 as minimum scale
+        minScale = 0.1;
+      }
+      
+      // Apply both min and max limits
+      // Ensure minScale is less than maxScale to allow scaling
+      if (minScale >= maxScale) {
+        // If minScale >= maxScale, allow scaling between minScale and a slightly larger value
+        // This ensures users can still scale down from current scale
+        const effectiveMaxScale = minScale * 1.1; // Allow 10% above minScale
+        this.imageScale = Math.max(minScale, Math.min(newScale, effectiveMaxScale));
+      } else {
+        this.imageScale = Math.max(minScale, Math.min(newScale, maxScale));
+      }
+    }
+    
+    // Calculate rotation based on angle change
+    const initialVector = {
+      dx: this.initialImageState.focalPoint.x - center.x,
+      dy: this.initialImageState.focalPoint.y - center.y
+    };
+    const currentVector = {
+      dx: currentPoint.x - center.x,
+      dy: currentPoint.y - center.y
+    };
+    
+    // Calculate angles using atan2
+    const initialAngle = Math.atan2(initialVector.dy, initialVector.dx);
+    const currentAngle = Math.atan2(currentVector.dy, currentVector.dx);
+    
+    // Calculate rotation delta
+    let angleDelta = currentAngle - initialAngle;
+    
+    // Normalize angle to [-π, π] range
+    while (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
+    while (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+    
+    // Apply rotation
+    this.imageRotation = this.initialImageState.rotation + angleDelta;
+    
+        // Show reset rotation button if rotated
+        document.getElementById('resetRotationBtn').style.display = 
+          Math.abs(this.imageRotation) > 0.01 ? 'block' : 'none';
+    
+    // Use requestAnimationFrame for smoother rendering
+    if (!this.renderScheduled) {
+      this.renderScheduled = true;
+      requestAnimationFrame(() => {
+        this.render();
+        this.renderScheduled = false;
+      });
     }
   }
   
   constrainPosition(x, y) {
+    // This matches Flutter's constraint logic exactly (lines 630-661)
     if (!this.userImage) return { x, y };
     
-    const imageHalfWidth = (this.userImage.width * this.imageScale) / 2;
-    const imageHalfHeight = (this.userImage.height * this.imageScale) / 2;
-    
-    const absCos = Math.abs(Math.cos(this.imageRotation));
-    const absSin = Math.abs(Math.sin(this.imageRotation));
-    const boundingHalfWidth = imageHalfWidth * absCos + imageHalfHeight * absSin;
-    const boundingHalfHeight = imageHalfWidth * absSin + imageHalfHeight * Math.abs(Math.cos(this.imageRotation));
-    
-    const editableAreaWidth = (this.canvasWidth * this.editableAreaWidthRatio) / 2;
-    const editableAreaHeight = (this.canvasHeight * this.editableAreaHeightRatio) / 2;
-    const centerX = this.canvasWidth / 2;
+    // Editable area - always uses responsive size (same as large)
+    const editableAreaWidth = this.canvasWidth * this.editableAreaWidthRatio / 2;
+    const editableAreaHeight = this.canvasHeight * this.editableAreaHeightRatio / 2;
+    const centerX = this.canvasWidth / 2 + 5; // Offset 20px to the right
     const centerY = this.canvasHeight / 2 + (this.canvasHeight * this.editableAreaVerticalOffsetRatio);
     
-    const constrainedX = Math.max(
-      centerX - editableAreaWidth + boundingHalfWidth,
-      Math.min(centerX + editableAreaWidth - boundingHalfWidth, x)
-    );
-    const constrainedY = Math.max(
-      centerY - editableAreaHeight + boundingHalfHeight,
-      Math.min(centerY + editableAreaHeight - boundingHalfHeight, y)
-    );
+    // Boundary constraints within editable area
+    // Ensure image content cannot move outside the editable area, considering rotation
+    const imageWidth = this.userImage.width * this.imageScale * 0.5;
+    const imageHeight = this.userImage.height * this.imageScale * 0.5;
+    
+    // Calculate bounding box size after rotation
+    // When a rectangle is rotated, its bounding box size is:
+    // width = |w * cos(θ)| + |h * sin(θ)|
+    // height = |w * sin(θ)| + |h * cos(θ)|
+    const absCos = Math.abs(Math.cos(this.imageRotation));
+    const absSin = Math.abs(Math.sin(this.imageRotation));
+    const rotatedWidth = imageWidth * absCos + imageHeight * absSin;
+    const rotatedHeight = imageWidth * absSin + imageHeight * absCos;
+    
+    // Constrain image center so that rotated image edges stay within editable area
+    // Image center can move within: [center - (areaSize - rotatedSize), center + (areaSize - rotatedSize)]
+    const xMin = centerX - editableAreaWidth + rotatedWidth;
+    const xMax = centerX + editableAreaWidth - rotatedWidth;
+    const yMin = centerY - editableAreaHeight + rotatedHeight;
+    const yMax = centerY + editableAreaHeight - rotatedHeight;
+    
+    // If rotated image is larger than editable area, center it and don't allow movement
+    const constrainedX = (rotatedWidth >= editableAreaWidth)
+        ? centerX  // Center if rotated image is too wide
+        : Math.max(xMin, Math.min(xMax, x));
+    const constrainedY = (rotatedHeight >= editableAreaHeight)
+        ? centerY  // Center if rotated image is too tall
+        : Math.max(yMin, Math.min(yMax, y));
     
     return { x: constrainedX, y: constrainedY };
+  }
+  
+  async removeBackground(img) {
+    // Remove background from image using canvas
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw original image
+      ctx.drawImage(img, 0, 0);
+      
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Simple background removal: remove white/light colors
+      // Threshold for background removal (adjust as needed)
+      const threshold = 240; // Pixels with RGB values above this will be made transparent
+      const tolerance = 30; // Additional tolerance for near-white colors
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const avg = (r + g + b) / 3;
+        
+        // If pixel is close to white, make it transparent
+        if (avg > threshold || (r > threshold - tolerance && g > threshold - tolerance && b > threshold - tolerance)) {
+          data[i + 3] = 0; // Set alpha to 0 (transparent)
+        }
+      }
+      
+      // Put modified image data back
+      ctx.putImageData(imageData, 0, 0);
+      
+      // Create new image from processed canvas
+      const processedImg = new Image();
+      processedImg.onload = () => resolve(processedImg);
+      processedImg.onerror = () => resolve(img); // Fallback to original if processing fails
+      processedImg.src = canvas.toDataURL('image/png');
+    });
+  }
+  
+  async trimImage(img) {
+    // Trim transparent/white edges from image
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = imageData.data;
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      // Find top edge
+      let top = 0;
+      for (let y = 0; y < height; y++) {
+        let hasContent = false;
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const alpha = pixels[i + 3];
+          if (alpha > 0) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (hasContent) {
+          top = y;
+          break;
+        }
+      }
+      
+      // Find bottom edge
+      let bottom = height - 1;
+      for (let y = height - 1; y >= 0; y--) {
+        let hasContent = false;
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const alpha = pixels[i + 3];
+          if (alpha > 0) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (hasContent) {
+          bottom = y;
+          break;
+        }
+      }
+      
+      // Find left edge
+      let left = 0;
+      for (let x = 0; x < width; x++) {
+        let hasContent = false;
+        for (let y = 0; y < height; y++) {
+          const i = (y * width + x) * 4;
+          const alpha = pixels[i + 3];
+          if (alpha > 0) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (hasContent) {
+          left = x;
+          break;
+        }
+      }
+      
+      // Find right edge
+      let right = width - 1;
+      for (let x = width - 1; x >= 0; x--) {
+        let hasContent = false;
+        for (let y = 0; y < height; y++) {
+          const i = (y * width + x) * 4;
+          const alpha = pixels[i + 3];
+          if (alpha > 0) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (hasContent) {
+          right = x;
+          break;
+        }
+      }
+      
+      // Calculate trimmed dimensions
+      const trimmedWidth = right - left + 1;
+      const trimmedHeight = bottom - top + 1;
+      
+      // If no content found or dimensions are invalid, return original
+      if (trimmedWidth <= 0 || trimmedHeight <= 0 || left >= right || top >= bottom) {
+        resolve(img);
+        return;
+      }
+      
+      // Create new canvas with trimmed dimensions
+      const trimmedCanvas = document.createElement('canvas');
+      trimmedCanvas.width = trimmedWidth;
+      trimmedCanvas.height = trimmedHeight;
+      const trimmedCtx = trimmedCanvas.getContext('2d');
+      
+      // Draw the trimmed portion
+      trimmedCtx.drawImage(
+        canvas,
+        left, top, trimmedWidth, trimmedHeight,
+        0, 0, trimmedWidth, trimmedHeight
+      );
+      
+      const trimmedImg = new Image();
+      trimmedImg.onload = () => resolve(trimmedImg);
+      trimmedImg.onerror = () => resolve(img); // Fallback to original if processing fails
+      trimmedImg.src = trimmedCanvas.toDataURL('image/png');
+    });
   }
   
   async loadUserImage(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const img = new Image();
-        img.onload = () => {
-          this.userImage = img;
+        img.onload = async () => {
+          // Remove background from image
+          const bgRemovedImg = await this.removeBackground(img);
+          // Trim transparent edges
+          const processedImg = await this.trimImage(bgRemovedImg);
+          this.userImage = processedImg;
           
           // Center image
-          const centerX = this.canvasWidth / 2;
+          const centerX = this.canvasWidth / 2 + 5; // Offset 20px to the right
           const centerY = this.canvasHeight / 2 + (this.canvasHeight * this.editableAreaVerticalOffsetRatio);
           
-          // Calculate initial scale
+          // Calculate initial scale (matches Flutter lines 399-425)
           const editableAreaWidth = this.canvasWidth * this.editableAreaWidthRatio;
           const editableAreaHeight = this.canvasHeight * this.editableAreaHeightRatio;
-          const scaleX = editableAreaWidth / img.width;
-          const scaleY = editableAreaHeight / img.height;
-          const initialScale = Math.min(scaleX, scaleY) * 0.9;
           
+          // Calculate scale to fit image within editable area
+          const imageWidth = processedImg.width;
+          const imageHeight = processedImg.height;
+          
+          const scaleX = editableAreaWidth / imageWidth;
+          const scaleY = editableAreaHeight / imageHeight;
+          const initialScale = Math.min(scaleX, scaleY) * 0.9; // 90% to leave some margin
+          
+          // Apply print size limit to initial scale (matches Flutter)
+          const maxImageWidth = this.getMaxImageWidth(this.printSize);
+          const maxImageHeight = this.getMaxImageHeight(this.printSize);
+          const maxScaleX = maxImageWidth === Infinity ? Infinity : maxImageWidth / imageWidth;
+          const maxScaleY = maxImageHeight === Infinity ? Infinity : maxImageHeight / imageHeight;
+          const maxScale = Math.min(maxScaleX, maxScaleY);
+          
+          const finalScale = maxScale === Infinity 
+              ? initialScale 
+              : Math.min(initialScale, maxScale);
+          
+          // Set initial scale if current scale is 1.0 (default) - matches Flutter
+          if (this.imageScale === 1.0 && finalScale < 1.0) {
+            this.imageScale = Math.max(0.1, Math.min(finalScale, 3.0));
+          } else if (this.imageScale === 1.0) {
+            this.imageScale = Math.max(0.1, Math.min(initialScale, 3.0));
+          }
+          
+          // Center image in editable area - using configuration constant (matches Flutter line 428)
           this.imageX = centerX;
           this.imageY = centerY;
-          this.imageScale = Math.max(0.1, Math.min(initialScale, 3.0));
           this.imageRotation = 0;
           
-          // Hide upload overlay
-          document.getElementById('uploadOverlay').style.display = 'none';
-          document.getElementById('instructions').style.display = 'block';
+          // Set image as selected to show border and handles
+          this.isImageSelected = true;
+          
+          // Keep upload overlay visible
+          // The upload button should remain visible in top-right corner
           
           this.render();
           resolve();
@@ -620,6 +1109,9 @@ class TshirtEditor {
     
     this.ctx.drawImage(this.tshirtImage, offsetX, offsetY, displayWidth, displayHeight);
     
+    // Draw editable area border (hidden - commented out)
+    // this.drawEditableArea();
+    
     // Draw user image if loaded
     if (this.userImage) {
       this.ctx.save();
@@ -637,11 +1129,35 @@ class TshirtEditor {
         imageHeight
       );
       
-      // Draw border and corner handles
-      this.drawImageBorder(imageWidth / 2, imageHeight / 2);
+      // Draw border and corner handles when image is uploaded (always show)
+      if (this.isImageSelected) {
+        this.drawImageBorder(imageWidth / 2, imageHeight / 2);
+      }
       
       this.ctx.restore();
     }
+  }
+  
+  drawEditableArea() {
+    // Calculate editable area dimensions
+    const editableAreaWidth = this.canvasWidth * this.editableAreaWidthRatio;
+    const editableAreaHeight = this.canvasHeight * this.editableAreaHeightRatio;
+    const centerX = this.canvasWidth / 2 + 5; // Offset 20px to the right
+    const centerY = this.canvasHeight / 2 + (this.canvasHeight * this.editableAreaVerticalOffsetRatio);
+    
+    // Draw dashed border for editable area
+    this.ctx.save();
+    this.ctx.strokeStyle = 'rgba(255, 107, 157, 0.5)'; // Semi-transparent pink
+    this.ctx.lineWidth = 2;
+    this.ctx.setLineDash([8, 4]);
+    
+    // Draw rectangle centered at (centerX, centerY)
+    const x = centerX - editableAreaWidth / 2;
+    const y = centerY - editableAreaHeight / 2;
+    this.ctx.strokeRect(x, y, editableAreaWidth, editableAreaHeight);
+    
+    this.ctx.setLineDash([]);
+    this.ctx.restore();
   }
   
   drawImageBorder(imageHalfWidth, imageHalfHeight) {
@@ -674,6 +1190,8 @@ class TshirtEditor {
   }
   
   setPrintSize(size) {
+    // This matches Flutter's didUpdateWidget logic (lines 223-235)
+    const oldPrintSize = this.printSize;
     this.printSize = size;
     const prices = { small: 28.0, standard: 35.0, large: 45.0 };
     this.price = prices[size] || 45.0;
@@ -683,7 +1201,61 @@ class TshirtEditor {
       btn.classList.toggle('active', btn.dataset.size === size);
     });
     
+    // Adjust image scale when print size changes (matches Flutter)
+    if (this.userImage && oldPrintSize !== size) {
+      // Use requestAnimationFrame to ensure canvas size is available (matches Flutter's postFrameCallback)
+      requestAnimationFrame(() => {
+        if (this.canvasWidth > 0 && this.canvasHeight > 0) {
+          this.adjustImageForPrintSize();
+        }
+      });
+    }
+    
     this.updateUI();
+  }
+  
+  adjustImageForPrintSize() {
+    // This matches Flutter's _adjustImageForPrintSize exactly (lines 238-281)
+    if (!this.userImage || this.canvasWidth === 0 || this.canvasHeight === 0) {
+      return;
+    }
+    
+    const imageWidth = this.userImage.width;
+    const imageHeight = this.userImage.height;
+    let targetScale;
+    
+    switch (this.printSize) {
+      case 'small':
+        // Small: adjust image to 100x100 (maintain aspect ratio, fit within 100x100)
+        const scaleXSmall = 100.0 / imageWidth;
+        const scaleYSmall = 100.0 / imageHeight;
+        targetScale = Math.min(scaleXSmall, scaleYSmall); // Use smaller scale to fit within 100x100
+        break;
+      
+      case 'standard':
+        // Standard: adjust image to 220x200 (maintain aspect ratio, fit within 220x200)
+        const scaleXStandard = 220.0 / imageWidth;
+        const scaleYStandard = 200.0 / imageHeight;
+        targetScale = Math.min(scaleXStandard, scaleYStandard); // Use smaller scale to fit within 220x200
+        break;
+      
+      case 'large':
+      default:
+        // Large: adjust image to 90% of editable area
+        const editableAreaWidth = this.canvasWidth * this.editableAreaWidthRatio;
+        const editableAreaHeight = this.canvasHeight * this.editableAreaHeightRatio;
+        const scaleXLarge = (editableAreaWidth * 0.9) / imageWidth;
+        const scaleYLarge = (editableAreaHeight * 0.9) / imageHeight;
+        targetScale = Math.min(scaleXLarge, scaleYLarge); // Use smaller scale to fit within 90% of editable area
+        break;
+    }
+    
+    // Apply the new scale (clamp between 0.1 and 3.0) - matches Flutter
+    const clampedScale = Math.max(0.1, Math.min(targetScale, 3.0));
+    this.imageScale = clampedScale;
+    
+    // Re-render with new scale
+    this.render();
   }
   
   setSize(size) {
@@ -707,13 +1279,13 @@ class TshirtEditor {
   }
   
   setQuantity(quantity) {
-    this.quantity = Math.max(1, Math.min(300, quantity));
+    this.quantity = Math.max(1, Math.min(100, quantity));
     document.getElementById('quantityInput').value = this.quantity;
     
     const decrementBtn = document.getElementById('decrementBtn');
     const incrementBtn = document.getElementById('incrementBtn');
     decrementBtn.disabled = this.quantity <= 1;
-    incrementBtn.disabled = this.quantity >= 300;
+    incrementBtn.disabled = this.quantity >= 100;
     
     this.updateUI();
   }
@@ -726,12 +1298,31 @@ class TshirtEditor {
   }
   
   updateUI() {
-    document.getElementById('priceDisplay').textContent = `$${this.price.toFixed(2)}`;
+    const priceDisplay = document.getElementById('priceDisplay');
+    priceDisplay.innerHTML = `<span class="price-value">$${this.price.toFixed(2)}</span><span class="price-note">(Price per T-Shirt)</span>`;
+    // Update size button active state
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.size === this.size);
+    });
+  }
+  
+  showUploadImageDialog() {
+    const dialog = document.getElementById('uploadImageDialog');
+    if (dialog) {
+      dialog.classList.add('show');
+    }
+  }
+  
+  hideUploadImageDialog() {
+    const dialog = document.getElementById('uploadImageDialog');
+    if (dialog) {
+      dialog.classList.remove('show');
+    }
   }
   
   async checkout() {
     if (!this.userImage) {
-      alert('Please upload an image first');
+      this.showUploadImageDialog();
       return;
     }
     
@@ -784,9 +1375,16 @@ class TshirtEditor {
     
     const imageData = canvas.toDataURL('image/png');
     
+    // Store preview image in sessionStorage for order summary page
+    try {
+      sessionStorage.setItem('checkout_preview_image', imageData);
+      console.log('Checkout: Preview image stored in sessionStorage');
+    } catch (e) {
+      console.error('Checkout: Failed to store preview image:', e);
+    }
+    
     // Build checkout URL with parameters
     const params = new URLSearchParams({
-      imageData: imageData,
       size: this.size,
       quantity: this.quantity.toString(),
       price: this.price.toFixed(2),
@@ -800,7 +1398,9 @@ class TshirtEditor {
     });
     
     // Always navigate to /pages/order-summary (both local and production)
-    window.location.href = `/pages/order-summary?${params.toString()}`;
+    const targetUrl = `/pages/order-summary?${params.toString()}`;
+    console.log('Checkout: Navigating to', targetUrl);
+    window.location.href = targetUrl;
   }
 }
 
