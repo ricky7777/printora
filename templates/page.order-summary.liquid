@@ -442,11 +442,6 @@
             <span class="detail-label">Items Subtotal:</span>
             <span class="detail-value" id="subtotalDisplay">-</span>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Shipping Fee:</span>
-            <span class="detail-value" id="shippingFeeDisplay">-</span>
-          </div>
-
           <div class="total-price-container">
             <div class="total-price-row">
               <div>
@@ -617,24 +612,8 @@
     const subtotal = price * quantity;
     document.getElementById('subtotalDisplay').textContent = '$' + subtotal.toFixed(2);
     
-    // Calculate shipping fee based on quantity
-    let shippingFee = 0;
-    if (quantity <= 3) {
-      shippingFee = 9.99;
-    } else if (quantity <= 6) {
-      shippingFee = 14.99;
-    } else if (quantity <= 20) {
-      shippingFee = 24.99;
-    } else {
-      // For quantities above 20, use the highest tier
-      shippingFee = 24.99;
-    }
-    
-    // Display shipping fee
-    document.getElementById('shippingFeeDisplay').textContent = '$' + shippingFee.toFixed(2);
-    
-    // Calculate total price (product price * quantity + shipping fee)
-    const totalPrice = (price * quantity) + shippingFee;
+    // Calculate total price (product price * quantity, no shipping fee)
+    const totalPrice = price * quantity;
     document.getElementById('totalPriceDisplay').textContent = '$' + totalPrice.toFixed(2);
 
     // Display preview screenshot
