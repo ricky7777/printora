@@ -460,6 +460,21 @@
           <!-- Contact Information Form -->
           <div class="contact-form-container">
             <div class="contact-form-group">
+              <label for="customerNickName" class="contact-form-label">
+                Nick Name <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="customerNickName" 
+                name="nickName" 
+                class="contact-form-input" 
+                placeholder="Enter your nick name"
+                required
+              >
+              <div class="error-message" id="nickNameError">Please enter your nick name</div>
+            </div>
+
+            <div class="contact-form-group">
               <label for="customerEmail" class="contact-form-label">
                 Email <span class="required">*</span>
               </label>
@@ -493,6 +508,21 @@
                 >
               </div>
               <div class="error-message" id="phoneError">Please enter your phone number</div>
+            </div>
+
+            <div class="contact-form-group">
+              <label for="customerAddress" class="contact-form-label">
+                Address <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="customerAddress" 
+                name="address" 
+                class="contact-form-input" 
+                placeholder="Enter your address"
+                required
+              >
+              <div class="error-message" id="addressError">Please enter your address</div>
             </div>
 
             <div class="contact-form-group">
@@ -687,6 +717,21 @@
     function validateForm() {
       let isValid = true;
       
+      // Validate nick name
+      const nickNameInput = document.getElementById('customerNickName');
+      const nickNameError = document.getElementById('nickNameError');
+      const nickName = nickNameInput.value.trim();
+      
+      if (!nickName) {
+        nickNameInput.classList.add('error');
+        nickNameError.textContent = 'Please enter your nick name';
+        nickNameError.classList.add('show');
+        isValid = false;
+      } else {
+        nickNameInput.classList.remove('error');
+        nickNameError.classList.remove('show');
+      }
+      
       // Validate email
       const emailInput = document.getElementById('customerEmail');
       const emailError = document.getElementById('emailError');
@@ -726,10 +771,30 @@
         phoneError.classList.remove('show');
       }
       
+      // Validate address
+      const addressInput = document.getElementById('customerAddress');
+      const addressError = document.getElementById('addressError');
+      const address = addressInput.value.trim();
+      
+      if (!address) {
+        addressInput.classList.add('error');
+        addressError.textContent = 'Please enter your address';
+        addressError.classList.add('show');
+        isValid = false;
+      } else {
+        addressInput.classList.remove('error');
+        addressError.classList.remove('show');
+      }
+      
       return isValid;
     }
     
     // Remove error state on input
+    document.getElementById('customerNickName').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('nickNameError').classList.remove('show');
+    });
+    
     document.getElementById('customerEmail').addEventListener('input', function() {
       this.classList.remove('error');
       document.getElementById('emailError').classList.remove('show');
@@ -738,6 +803,11 @@
     document.getElementById('customerPhone').addEventListener('input', function() {
       this.classList.remove('error');
       document.getElementById('phoneError').classList.remove('show');
+    });
+    
+    document.getElementById('customerAddress').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('addressError').classList.remove('show');
     });
 
     // Continue button handler
@@ -756,42 +826,76 @@
       }
       
       // Get form values
+      const nickName = document.getElementById('customerNickName').value.trim();
       const email = document.getElementById('customerEmail').value.trim();
       const phoneInput = document.getElementById('customerPhone').value.trim();
       // Combine +64 prefix with user input
       const phone = phoneInput ? '+64 ' + phoneInput : '';
+      const address = document.getElementById('customerAddress').value.trim();
       const notes = document.getElementById('customerNotes').value.trim();
       
-      // Store checkout data in sessionStorage for POST-like behavior
-      const checkoutData = {
-        size: size || '',
-        quantity: quantity.toString(),
-        price: price.toFixed(2),
-        type: type || '',
-        tshirtColor: tshirtColor || '',
-        printSize: printSize || '',
-        designId: designId || '',
-        imageX: imageX.toString(),
-        imageY: imageY.toString(),
-        imageScale: imageScale.toString(),
-        imageRotation: imageRotation.toString(),
-        email: email,
-        phone: phone,
-        notes: notes
-      };
-      
-      try {
-        sessionStorage.setItem('checkout_data', JSON.stringify(checkoutData));
-        console.log('Order Summary: Checkout data stored in sessionStorage:', checkoutData);
-      } catch (e) {
-        console.error('Order Summary: Failed to store checkout data:', e);
+      // Map price to variant ID
+      // 28 元 = 44509060038725
+      // 35 元 = 44509060071493
+      // 45 元 = 44509060104261
+      let variantId = '';
+      const priceNum = parseFloat(price);
+      if (Math.abs(priceNum - 28) < 0.01) {
+        variantId = '44509060038725';
+      } else if (Math.abs(priceNum - 35) < 0.01) {
+        variantId = '44509060071493';
+      } else if (Math.abs(priceNum - 45) < 0.01) {
+        variantId = '44509060104261';
+      } else {
+        console.error('Order Summary: Unknown price, cannot determine variant ID. Price:', priceNum);
+        alert('Invalid price. Please contact support.');
+        return;
       }
       
-      // Navigate to checkout page (data will be read from sessionStorage)
-      // Use GET navigation instead of POST (Shopify pages don't support POST)
-      const targetUrl = '/pages/checkout';
-      console.log('Order Summary: Navigating to', targetUrl);
-      window.location.href = targetUrl;
+      // Build Shopify Cart Permalink URL
+      // Format: /cart/variant_id:quantity?checkout[email]=...&checkout[shipping_address][first_name]=...
+      const baseUrl = `/cart/${variantId}:${quantity}`;
+      const params = new URLSearchParams();
+      
+      // Add checkout parameters
+      if (email) {
+        params.append('checkout[email]', email);
+      }
+      
+      // Shipping address parameters
+      if (nickName) {
+        // Use nick name as first name (assuming it's a single name field)
+        params.append('checkout[shipping_address][first_name]', nickName);
+        // Set last name to empty or use a default
+        params.append('checkout[shipping_address][last_name]', '');
+      }
+      
+      if (address) {
+        params.append('checkout[shipping_address][address1]', address);
+      }
+      
+      // Set country to New Zealand (NZ) as default
+      params.append('checkout[shipping_address][country]', 'NZ');
+      
+      // Phone number (remove +64 prefix for phone field, or keep it)
+      if (phone) {
+        params.append('checkout[shipping_address][phone]', phone);
+      }
+      
+      // Optional fields - leave empty or set defaults
+      // params.append('checkout[shipping_address][city]', '');
+      // params.append('checkout[shipping_address][province]', '');
+      // params.append('checkout[shipping_address][zip]', '');
+      
+      // Build final URL
+      const checkoutUrl = baseUrl + (params.toString() ? '?' + params.toString() : '');
+      
+      console.log('Order Summary: Navigating to Shopify checkout:', checkoutUrl);
+      console.log('Order Summary: Variant ID:', variantId, 'Quantity:', quantity);
+      console.log('Order Summary: Customer data - Email:', email, 'Nick Name:', nickName, 'Phone:', phone, 'Address:', address);
+      
+      // Navigate to Shopify checkout
+      window.location.href = checkoutUrl;
     });
   </script>
 </body>

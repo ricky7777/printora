@@ -505,19 +505,40 @@ class TshirtEditor {
               const minScaleY = minImageHeight / imageHeight;
               minScale = Math.max(minScaleX, minScaleY); // Use larger scale to ensure both dimensions are at least 30px
             } else {
-              // For other sizes: use 0.1 as minimum scale
-              minScale = 0.1;
+              // For standard and large: allow very small scale to enable shrinking
+              // Use a very small minimum (0.01 = 1%) to allow significant shrinking
+              minScale = 0.01;
             }
             
             // Apply both min and max limits
+            // For standard and large print, maxScale is the absolute limit - never exceed it
             // Ensure minScale is less than maxScale to allow scaling
             if (minScale >= maxScale) {
-              // If minScale >= maxScale, allow scaling between minScale and a slightly larger value
-              // This ensures users can still scale down from current scale
-              const effectiveMaxScale = minScale * 1.1; // Allow 10% above minScale
-              newScale = Math.max(minScale, Math.min(newScale, effectiveMaxScale));
+              // If minScale >= maxScale, the image is already at minimum size
+              // For standard and large, strictly enforce maxScale (print size limit)
+              if (this.printSize === 'standard' || this.printSize === 'large') {
+                // Strictly enforce print size limit - never exceed maxScale
+                newScale = Math.max(minScale, Math.min(newScale, maxScale));
+              } else {
+                // For small logo, allow slight flexibility
+                const effectiveMaxScale = minScale * 1.1; // Allow 10% above minScale
+                newScale = Math.max(minScale, Math.min(newScale, effectiveMaxScale));
+              }
             } else {
+              // Normal case: apply both min and max limits
+              // For standard and large, maxScale is the absolute limit
               newScale = Math.max(minScale, Math.min(newScale, maxScale));
+            }
+            
+            // Double-check: for standard and large, ensure we never exceed print size limit
+            if (this.printSize === 'standard' || this.printSize === 'large') {
+              const finalScaledWidth = imageWidth * newScale;
+              const finalScaledHeight = imageHeight * newScale;
+              if (finalScaledWidth > maxImageWidth || finalScaledHeight > maxImageHeight) {
+                // If still exceeds, force to maxScale
+                console.warn('⚠️ Scale would exceed print size limit, clamping to maxScale');
+                newScale = maxScale;
+              }
             }
             
             this.imageScale = newScale;
@@ -803,19 +824,40 @@ class TshirtEditor {
         const minScaleY = minImageHeight / imageHeight;
         minScale = Math.max(minScaleX, minScaleY); // Use larger scale to ensure both dimensions are at least 30px
       } else {
-        // For other sizes: use 0.1 as minimum scale
-        minScale = 0.1;
+        // For standard and large: allow very small scale to enable shrinking
+        // Use a very small minimum (0.01 = 1%) to allow significant shrinking
+        minScale = 0.01;
       }
       
       // Apply both min and max limits
+      // For standard and large print, maxScale is the absolute limit - never exceed it
       // Ensure minScale is less than maxScale to allow scaling
       if (minScale >= maxScale) {
-        // If minScale >= maxScale, allow scaling between minScale and a slightly larger value
-        // This ensures users can still scale down from current scale
-        const effectiveMaxScale = minScale * 1.1; // Allow 10% above minScale
-        this.imageScale = Math.max(minScale, Math.min(newScale, effectiveMaxScale));
+        // If minScale >= maxScale, the image is already at minimum size
+        // For standard and large, strictly enforce maxScale (print size limit)
+        if (this.printSize === 'standard' || this.printSize === 'large') {
+          // Strictly enforce print size limit - never exceed maxScale
+          this.imageScale = Math.max(minScale, Math.min(newScale, maxScale));
+        } else {
+          // For small logo, allow slight flexibility
+          const effectiveMaxScale = minScale * 1.1; // Allow 10% above minScale
+          this.imageScale = Math.max(minScale, Math.min(newScale, effectiveMaxScale));
+        }
       } else {
+        // Normal case: apply both min and max limits
+        // For standard and large, maxScale is the absolute limit
         this.imageScale = Math.max(minScale, Math.min(newScale, maxScale));
+      }
+      
+      // Double-check: for standard and large, ensure we never exceed print size limit
+      if (this.printSize === 'standard' || this.printSize === 'large') {
+        const finalScaledWidth = imageWidth * this.imageScale;
+        const finalScaledHeight = imageHeight * this.imageScale;
+        if (finalScaledWidth > maxImageWidth || finalScaledHeight > maxImageHeight) {
+          // If still exceeds, force to maxScale
+          console.warn('⚠️ Scale would exceed print size limit, clamping to maxScale');
+          this.imageScale = maxScale;
+        }
       }
     }
     
@@ -1064,11 +1106,22 @@ class TshirtEditor {
       reader.onload = async (e) => {
         const img = new Image();
         img.onload = async () => {
+          // Log original image size
+          console.log('=== Image Upload Started ===');
+          console.log('Original image size:', img.width, 'x', img.height);
+          console.log('Original image file size:', file.size, 'bytes');
+          
           // Remove background from image
           const bgRemovedImg = await this.removeBackground(img);
+          console.log('After background removal:', bgRemovedImg.width, 'x', bgRemovedImg.height);
+          
           // Trim transparent edges
           const processedImg = await this.trimImage(bgRemovedImg);
-          this.userImage = processedImg;
+          console.log('After trimming (final processed image):', processedImg.width, 'x', processedImg.height);
+          console.log('Processed image size change:', 
+            ((processedImg.width / img.width) * 100).toFixed(2) + '% width,',
+            ((processedImg.height / img.height) * 100).toFixed(2) + '% height');
+          // Don't set userImage here - set it after calculating scale
           
           // Center image
           const centerX = this.canvasWidth / 2 + 5; // Offset 20px to the right
@@ -1082,27 +1135,55 @@ class TshirtEditor {
           const imageWidth = processedImg.width;
           const imageHeight = processedImg.height;
           
-          const scaleX = editableAreaWidth / imageWidth;
-          const scaleY = editableAreaHeight / imageHeight;
-          const initialScale = Math.min(scaleX, scaleY) * 0.9; // 90% to leave some margin
-          
-          // Apply print size limit to initial scale (matches Flutter)
+          // Get print size limits first
           const maxImageWidth = this.getMaxImageWidth(this.printSize);
           const maxImageHeight = this.getMaxImageHeight(this.printSize);
+          
+          // Calculate scale based on print size limits (must fit within print size)
+          // This ensures that if image is larger than print size, it will be scaled down
           const maxScaleX = maxImageWidth === Infinity ? Infinity : maxImageWidth / imageWidth;
           const maxScaleY = maxImageHeight === Infinity ? Infinity : maxImageHeight / imageHeight;
           const maxScale = Math.min(maxScaleX, maxScaleY);
           
-          const finalScale = maxScale === Infinity 
-              ? initialScale 
-              : Math.min(initialScale, maxScale);
-          
-          // Set initial scale if current scale is 1.0 (default) - matches Flutter
-          if (this.imageScale === 1.0 && finalScale < 1.0) {
-            this.imageScale = Math.max(0.1, Math.min(finalScale, 3.0));
-          } else if (this.imageScale === 1.0) {
-            this.imageScale = Math.max(0.1, Math.min(initialScale, 3.0));
+          // For small and standard print sizes, use maxScale directly (strict limit)
+          // For large print size, also consider editable area
+          let finalScale;
+          if (maxScale === Infinity) {
+            // Large print: also calculate scale to fit within editable area
+            const scaleX = editableAreaWidth / imageWidth;
+            const scaleY = editableAreaHeight / imageHeight;
+            const editableAreaScale = Math.min(scaleX, scaleY) * 0.9; // 90% to leave some margin
+            finalScale = editableAreaScale;
+          } else {
+            // Small or standard: STRICTLY use maxScale to ensure print size limit
+            // Don't consider editable area - print size limit is absolute
+            // This ensures images are always scaled down to fit within print size (100x100 for small, 220x200 for standard)
+            finalScale = maxScale;
           }
+          
+          // Always set scale when image is uploaded, ensuring it fits within print size
+          // For small/standard, finalScale is already the correct scale (maxScale)
+          // For large, finalScale is editableAreaScale
+          // IMPORTANT: Set scale BEFORE setting userImage to ensure render uses correct scale
+          // Don't clamp to 3.0 for small/standard - they need to be smaller
+          const calculatedScale = this.printSize === 'large' 
+              ? Math.max(0.1, Math.min(finalScale, 3.0))
+              : Math.max(0.01, finalScale); // Allow very small scales for small/standard to fit within limits
+          
+          // Debug logging
+          console.log('=== Image Scale Calculation ===');
+          console.log('Print size:', this.printSize);
+          console.log('Processed image dimensions:', imageWidth, 'x', imageHeight);
+          console.log('Max allowed dimensions (print size limit):', maxImageWidth, 'x', maxImageHeight);
+          console.log('Calculated maxScale:', maxScale);
+          console.log('Final calculated scale:', calculatedScale);
+          console.log('Scaled dimensions (will be rendered at):', 
+            (imageWidth * calculatedScale).toFixed(2), 'x', 
+            (imageHeight * calculatedScale).toFixed(2));
+          console.log('Scale percentage:', (calculatedScale * 100).toFixed(2) + '%');
+          
+          // Set scale FIRST, before setting userImage
+          this.imageScale = calculatedScale;
           
           // Center image in editable area - using configuration constant (matches Flutter line 428)
           this.imageX = centerX;
@@ -1112,10 +1193,57 @@ class TshirtEditor {
           // Set image as selected to show border and handles
           this.isImageSelected = true;
           
+          // Set userImage AFTER setting scale to ensure render uses correct scale
+          this.userImage = processedImg;
+          
           // Keep upload overlay visible
           // The upload button should remain visible in top-right corner
           
-          this.render();
+          // Force immediate render with correct scale using requestAnimationFrame to ensure DOM is ready
+          // This ensures the scale is applied immediately when image is displayed
+          requestAnimationFrame(() => {
+            // Double-check scale is still correct before rendering
+            console.log('=== Before Render ===');
+            console.log('imageScale value:', this.imageScale);
+            console.log('userImage dimensions:', this.userImage.width, 'x', this.userImage.height);
+            console.log('Canvas actual size:', this.canvas.width, 'x', this.canvas.height);
+            console.log('Canvas CSS size:', this.canvas.clientWidth, 'x', this.canvas.clientHeight);
+            console.log('Expected rendered size:', 
+              (this.userImage.width * this.imageScale).toFixed(2), 'x', 
+              (this.userImage.height * this.imageScale).toFixed(2));
+            
+            // Check if canvas CSS size matches actual size (could cause scaling issues)
+            const cssWidth = this.canvas.clientWidth;
+            const cssHeight = this.canvas.clientHeight;
+            const actualWidth = this.canvas.width;
+            const actualHeight = this.canvas.height;
+            
+            if (cssWidth !== actualWidth || cssHeight !== actualHeight) {
+              console.warn('⚠️ Canvas CSS size does not match actual size!');
+              console.warn('CSS:', cssWidth, 'x', cssHeight, 'vs Actual:', actualWidth, 'x', actualHeight);
+              console.warn('This may cause the image to appear at the wrong size.');
+            }
+            
+            // Ensure scale is still set correctly
+            if (Math.abs(this.imageScale - calculatedScale) > 0.001) {
+              console.warn('⚠️ Image scale was modified! Resetting to calculated scale.');
+              console.warn('Previous scale:', this.imageScale, '-> New scale:', calculatedScale);
+              this.imageScale = calculatedScale;
+            }
+            
+            this.render();
+            
+            // Verify scale after render
+            console.log('=== After Render ===');
+            console.log('Final imageScale:', this.imageScale);
+            console.log('Final rendered dimensions:', 
+              (this.userImage.width * this.imageScale).toFixed(2), 'x', 
+              (this.userImage.height * this.imageScale).toFixed(2));
+            console.log('Canvas size after render:', this.canvas.width, 'x', this.canvas.height);
+            console.log('Canvas CSS size after render:', this.canvas.clientWidth, 'x', this.canvas.clientHeight);
+            console.log('=== Image Upload Complete ===');
+          });
+          
           resolve();
         };
         img.onerror = reject;
@@ -1166,6 +1294,16 @@ class TshirtEditor {
       
       const imageWidth = this.userImage.width * this.imageScale;
       const imageHeight = this.userImage.height * this.imageScale;
+      
+      // Debug: Log actual drawing dimensions
+      if (Math.random() < 0.01) { // Only log occasionally to avoid spam
+        console.log('=== Render Debug ===');
+        console.log('Canvas actual size:', this.canvas.width, 'x', this.canvas.height);
+        console.log('Canvas CSS size:', this.canvas.clientWidth, 'x', this.canvas.clientHeight);
+        console.log('Drawing image at:', imageWidth.toFixed(2), 'x', imageHeight.toFixed(2));
+        console.log('Image position:', this.imageX.toFixed(2), ',', this.imageY.toFixed(2));
+        console.log('Image scale:', this.imageScale);
+      }
       
       this.ctx.drawImage(
         this.userImage,
@@ -1270,9 +1408,23 @@ class TshirtEditor {
     const imageHeight = this.userImage.height;
     let targetScale;
     
+    // Get print size limits
+    const maxImageWidth = this.getMaxImageWidth(this.printSize);
+    const maxImageHeight = this.getMaxImageHeight(this.printSize);
+    
+    console.log('=== Adjusting Image for Print Size ===');
+    console.log('New print size:', this.printSize);
+    console.log('Current image dimensions:', imageWidth, 'x', imageHeight);
+    console.log('Max allowed dimensions:', maxImageWidth, 'x', maxImageHeight);
+    console.log('Current imageScale:', this.imageScale);
+    console.log('Current scaled dimensions:', 
+      (imageWidth * this.imageScale).toFixed(2), 'x', 
+      (imageHeight * this.imageScale).toFixed(2));
+    
     switch (this.printSize) {
       case 'small':
         // Small: adjust image to 100x100 (maintain aspect ratio, fit within 100x100)
+        // STRICTLY enforce 100x100 limit
         const scaleXSmall = 100.0 / imageWidth;
         const scaleYSmall = 100.0 / imageHeight;
         targetScale = Math.min(scaleXSmall, scaleYSmall); // Use smaller scale to fit within 100x100
@@ -1280,6 +1432,7 @@ class TshirtEditor {
       
       case 'standard':
         // Standard: adjust image to 220x200 (maintain aspect ratio, fit within 220x200)
+        // STRICTLY enforce 220x200 limit - same logic as small logo
         const scaleXStandard = 220.0 / imageWidth;
         const scaleYStandard = 200.0 / imageHeight;
         targetScale = Math.min(scaleXStandard, scaleYStandard); // Use smaller scale to fit within 220x200
@@ -1288,17 +1441,53 @@ class TshirtEditor {
       case 'large':
       default:
         // Large: adjust image to 90% of editable area
+        // STRICTLY enforce the limit - same logic as small logo
         const editableAreaWidth = this.canvasWidth * this.editableAreaWidthRatio;
         const editableAreaHeight = this.canvasHeight * this.editableAreaHeightRatio;
-        const scaleXLarge = (editableAreaWidth * 0.9) / imageWidth;
-        const scaleYLarge = (editableAreaHeight * 0.9) / imageHeight;
+        const maxWidthLarge = editableAreaWidth * 0.9;
+        const maxHeightLarge = editableAreaHeight * 0.9;
+        const scaleXLarge = maxWidthLarge / imageWidth;
+        const scaleYLarge = maxHeightLarge / imageHeight;
         targetScale = Math.min(scaleXLarge, scaleYLarge); // Use smaller scale to fit within 90% of editable area
         break;
     }
     
-    // Apply the new scale (clamp between 0.1 and 3.0) - matches Flutter
-    const clampedScale = Math.max(0.1, Math.min(targetScale, 3.0));
+    // Apply the new scale
+    // For all print sizes, allow very small scales to fit within limits
+    // Don't clamp to 3.0 for any size - they all need to fit within their limits
+    const clampedScale = Math.max(0.01, targetScale); // Allow very small scales for all sizes
+    
+    console.log('Calculated targetScale:', targetScale);
+    console.log('Clamped scale:', clampedScale);
+    console.log('New scaled dimensions:', 
+      (imageWidth * clampedScale).toFixed(2), 'x', 
+      (imageHeight * clampedScale).toFixed(2));
+    
+    // ALWAYS apply the new scale based on original image size and new print size limit
+    // This ensures the image always fits within the selected print size, regardless of current scale
+    const originalScaledWidth = imageWidth * clampedScale;
+    const originalScaledHeight = imageHeight * clampedScale;
+    
+    console.log('Original image size:', imageWidth, 'x', imageHeight);
+    console.log('Applying scale to original image size');
+    console.log('Resulting size:', originalScaledWidth.toFixed(2), 'x', originalScaledHeight.toFixed(2));
+    console.log('Print size limit:', maxImageWidth, 'x', maxImageHeight);
+    
+    // Verify the scaled size fits within limits
+    if (originalScaledWidth > maxImageWidth || originalScaledHeight > maxImageHeight) {
+      console.warn('⚠️ Calculated size still exceeds limit! This should not happen.');
+      console.warn('Scaled:', originalScaledWidth.toFixed(2), 'x', originalScaledHeight.toFixed(2));
+      console.warn('Limit:', maxImageWidth, 'x', maxImageHeight);
+    }
+    
+    // Always apply the new scale - always recalculate based on original image size
     this.imageScale = clampedScale;
+    
+    console.log('Final imageScale after adjustment:', this.imageScale);
+    console.log('Final scaled dimensions (from original image):', 
+      (imageWidth * this.imageScale).toFixed(2), 'x', 
+      (imageHeight * this.imageScale).toFixed(2));
+    console.log('=== Image Adjustment Complete ===');
     
     // Re-render with new scale
     this.render();
