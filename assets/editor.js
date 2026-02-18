@@ -16,7 +16,6 @@ class TshirtEditor {
     // Image properties
     this.userImage = null;
     this.tshirtImage = null;
-    this.originalImageUrl = null; // R2 public URL of uploaded original design file
     this.imageX = 0;
     this.imageY = 0;
     this.imageScale = 1.0;
@@ -1101,52 +1100,7 @@ class TshirtEditor {
     });
   }
   
-  /**
-   * Upload file to R2 via Worker presigned URL. Returns public URL or null on failure.
-   */
-  async uploadOriginalToR2(file) {
-    const baseUrl = typeof window.PRINTORA_WORKER_URL !== 'undefined' ? window.PRINTORA_WORKER_URL : '';
-    if (!baseUrl) {
-      console.warn('Editor: PRINTORA_WORKER_URL not set, skipping R2 upload');
-      return null;
-    }
-    try {
-      const res = await fetch(baseUrl + '/api/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: file.name || 'image.png',
-          contentType: file.type || 'image/png',
-          prefix: 'originals'
-        })
-      });
-      if (!res.ok) {
-        const err = await res.text();
-        console.error('Editor: Failed to get upload URL:', res.status, err);
-        return null;
-      }
-      const { uploadUrl, publicUrl } = await res.json();
-      const putRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type || 'image/png' }
-      });
-      if (!putRes.ok) {
-        console.error('Editor: Failed to upload file to R2:', putRes.status);
-        return null;
-      }
-      console.log('Editor: Original image uploaded to R2:', publicUrl);
-      return publicUrl;
-    } catch (e) {
-      console.error('Editor: R2 upload error:', e);
-      return null;
-    }
-  }
-
   async loadUserImage(file) {
-    const publicUrl = await this.uploadOriginalToR2(file);
-    this.originalImageUrl = publicUrl || null;
-
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -1655,11 +1609,23 @@ class TshirtEditor {
     }
     
     const imageData = canvas.toDataURL('image/png');
-    
+
+    // Store original design image (userImage) for R2 upload on order-summary "Continue to Payment"
+    try {
+      const origCanvas = document.createElement('canvas');
+      origCanvas.width = this.userImage.width;
+      origCanvas.height = this.userImage.height;
+      const origCtx = origCanvas.getContext('2d');
+      origCtx.drawImage(this.userImage, 0, 0);
+      const originalImageData = origCanvas.toDataURL('image/png');
+      sessionStorage.setItem('checkout_original_image', originalImageData);
+    } catch (e) {
+      console.error('Checkout: Failed to store original image for order-summary:', e);
+    }
+
     // Store preview image in sessionStorage for order summary page
     try {
       sessionStorage.setItem('checkout_preview_image', imageData);
-      console.log('Checkout: Preview image stored in sessionStorage');
     } catch (e) {
       console.error('Checkout: Failed to store preview image:', e);
     }
@@ -1675,8 +1641,7 @@ class TshirtEditor {
       imageX: this.imageX.toFixed(2),
       imageY: this.imageY.toFixed(2),
       imageScale: this.imageScale.toFixed(2),
-      imageRotation: this.imageRotation.toFixed(2),
-      originalImageUrl: this.originalImageUrl || ''
+      imageRotation: this.imageRotation.toFixed(2)
     };
     
     try {

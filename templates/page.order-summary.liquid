@@ -581,6 +581,15 @@
     } catch (e) {
       console.error('Order Summary: Error reading sessionStorage:', e);
     }
+
+    // Original design image (for R2 upload on Continue to Payment)
+    let originalImageDataUrl = null;
+    try {
+      originalImageDataUrl = sessionStorage.getItem('checkout_original_image');
+      console.log('Order Summary: Retrieved original image from sessionStorage:', originalImageDataUrl ? 'found (' + originalImageDataUrl.length + ' chars)' : 'not found');
+    } catch (e) {
+      console.error('Order Summary: Error reading checkout_original_image:', e);
+    }
     
     // Get order parameters from sessionStorage (POST data) or URL (fallback)
     const size = orderData?.size || urlParams.get('size');
@@ -789,31 +798,83 @@
       document.getElementById('addressError').classList.remove('show');
     });
 
-    // Upload preview canvas to R2 and return public URL, or empty string on failure
-    function uploadPreviewToR2() {
+    // Convert data URL to Blob
+    function dataUrlToBlob(dataUrl) {
+      return fetch(dataUrl).then(function(r) { return r.blob(); });
+    }
+
+    // Upload one image to R2: get presigned URL then PUT. Returns { url, error }.
+    function uploadToR2(blob, prefix, label) {
       const workerBase = window.PRINTORA_WORKER_URL || '';
-      if (!workerBase || !canvas || canvas.width === 0) return Promise.resolve('');
-      return new Promise(function(resolve) {
-        canvas.toBlob(async function(blob) {
-          if (!blob) { resolve(''); return; }
-          try {
-            const res = await fetch(workerBase + '/api/upload-url', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ filename: 'preview.png', contentType: 'image/png', prefix: 'previews' })
+      if (!workerBase) {
+        console.warn('[R2] PRINTORA_WORKER_URL not set, skipping upload for', label);
+        return Promise.resolve({ url: '', error: 'Worker URL not set' });
+      }
+      const filename = prefix === 'originals' ? 'original.png' : 'preview.png';
+      console.log('[R2] Uploading ' + label + '...', 'size:', blob ? blob.size : 0, 'bytes');
+      return fetch(workerBase + '/api/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: filename, contentType: 'image/png', prefix: prefix })
+      })
+        .then(function(res) {
+          if (!res.ok) {
+            return res.text().then(function(errText) {
+              console.error('[R2] ' + label + ' – get upload URL failed:', res.status, errText);
+              return { url: '', error: 'Get upload URL: ' + res.status + ' ' + errText };
             });
-            if (!res.ok) { resolve(''); return; }
-            const data = await res.json();
-            const putRes = await fetch(data.uploadUrl, {
-              method: 'PUT',
-              body: blob,
-              headers: { 'Content-Type': 'image/png' }
-            });
-            resolve(putRes.ok ? (data.publicUrl || '') : '');
-          } catch (e) {
-            console.error('Order Summary: Preview upload failed', e);
-            resolve('');
           }
+          return res.json();
+        })
+        .then(function(data) {
+          if (data.error) {
+            console.error('[R2] ' + label + ' – upload URL response error:', data.error);
+            return { url: '', error: data.error };
+          }
+          return fetch(data.uploadUrl, {
+            method: 'PUT',
+            body: blob,
+            headers: { 'Content-Type': 'image/png' }
+          }).then(function(putRes) {
+            if (!putRes.ok) {
+              console.error('[R2] ' + label + ' – PUT failed:', putRes.status, putRes.statusText);
+              return { url: '', error: 'PUT failed: ' + putRes.status + ' ' + putRes.statusText };
+            }
+            console.log('[R2] ' + label + ' upload success:', data.publicUrl || '');
+            return { url: data.publicUrl || '', error: '' };
+          });
+        })
+        .catch(function(e) {
+          console.error('[R2] ' + label + ' – error:', e && e.message ? e.message : e);
+          return { url: '', error: (e && e.message) ? e.message : String(e) };
+        });
+    }
+
+    // Upload original image (data URL) to R2, return public URL or ''.
+    function uploadOriginalToR2() {
+      if (!originalImageDataUrl) {
+        console.log('[R2] No original image in sessionStorage, skipping original upload');
+        return Promise.resolve('');
+      }
+      return dataUrlToBlob(originalImageDataUrl).then(function(blob) {
+        return uploadToR2(blob, 'originals', 'Original').then(function(r) { return r.url; });
+      });
+    }
+
+    // Upload preview canvas to R2, return public URL or ''.
+    function uploadPreviewToR2() {
+      if (!canvas || canvas.width === 0) {
+        console.log('[R2] No preview canvas, skipping preview upload');
+        return Promise.resolve('');
+      }
+      return new Promise(function(resolve) {
+        canvas.toBlob(function(blob) {
+          if (!blob) {
+            console.warn('[R2] Preview toBlob returned no blob');
+            resolve('');
+            return;
+          }
+          uploadToR2(blob, 'previews', 'Preview').then(function(r) { resolve(r.url); });
         }, 'image/png');
       });
     }
@@ -852,21 +913,24 @@
       }
 
       continueButton.disabled = true;
-      continueButton.textContent = 'Uploading preview...';
+      continueButton.textContent = 'Uploading images...';
+      console.log('[R2] Start uploading (original then preview) on Continue to Payment');
+      const originalUrl = await uploadOriginalToR2();
       const previewUrl = await uploadPreviewToR2();
-      const originalUrl = (orderData && orderData.originalImageUrl) ? orderData.originalImageUrl : '';
+      console.log('[R2] Done. Original URL:', originalUrl || '(none)');
+      console.log('[R2] Done. Preview URL:', previewUrl || '(none)');
       continueButton.textContent = 'Continue to Payment';
 
-      const properties = {
-        'Preview URL': previewUrl || '',
-        'Original URL': originalUrl || '',
+      var properties = {
         'Size': size || '',
         'Type': type || '',
         'T-Shirt Color': tshirtColor === 'black' ? 'Black' : 'White',
         'Print Size': printSize ? (printSize.charAt(0).toUpperCase() + printSize.slice(1)) : ''
       };
-      const propertiesJson = JSON.stringify(properties);
-      const propertiesBase64 = btoa(unescape(encodeURIComponent(propertiesJson)));
+      if (previewUrl) properties['Preview URL'] = previewUrl;
+      if (originalUrl) properties['Original URL'] = originalUrl;
+      var propertiesJson = JSON.stringify(properties);
+      var propertiesBase64 = btoa(unescape(encodeURIComponent(propertiesJson)));
 
       const baseUrl = '/cart/' + variantId + ':' + quantity;
       const params = new URLSearchParams();
