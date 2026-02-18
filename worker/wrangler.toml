@@ -2,8 +2,11 @@ name = "printora-worker"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
-# R2 bucket for design images (binding for presigned URL generation)
-# Create bucket in Cloudflare dashboard and enable public access or custom domain
+# R2 bucket: Worker uploads via binding (avoids browser PUT to R2 which can cause ERR_SSL_VERSION_OR_CIPHER_MISMATCH)
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "printora"
+
 [vars]
 R2_BUCKET_NAME = "printora"
 R2_ACCOUNT_ID = "7c7f18ffa4701a0349a7ab0884291f82"   # Set via wrangler secret or replace with your account id

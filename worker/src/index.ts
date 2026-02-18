@@ -1,18 +1,13 @@
 /**
  * Printora Cloudflare Worker
- * - POST /api/upload-url: return presigned R2 URL for client upload
+ * - POST /api/upload: receive image body, write to R2 via binding, return public URL (avoids browser PUT to R2/SSL issues)
  * - POST /shopify/webhook: receive order webhook, send email to merchant
  */
-
-import { AwsClient } from "aws4fetch";
 
 const MERCHANT_EMAIL = "contact@printora.co.nz";
 
 export interface Env {
-  R2_ACCESS_KEY_ID: string;
-  R2_SECRET_ACCESS_KEY: string;
-  R2_ACCOUNT_ID: string;
-  R2_BUCKET_NAME: string;
+  BUCKET: R2Bucket;
   PUBLIC_BASE_URL: string;
   SHOPIFY_WEBHOOK_SECRET: string;
   RESEND_API_KEY: string;
@@ -39,13 +34,16 @@ export default {
     }
 
     try {
-      if (url.pathname === "/api/upload-url" && request.method === "POST") {
-        return await handleUploadUrl(request, env, origin);
+      if (url.pathname === "/api/upload" && request.method === "POST") {
+        return await handleUpload(request, env, origin);
       }
       if (url.pathname === "/shopify/webhook" && request.method === "POST") {
         return await handleShopifyWebhook(request, env);
       }
-      return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+      return new Response(JSON.stringify({ error: "Not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
+      });
     } catch (e) {
       console.error("Worker error:", e);
       return new Response(
@@ -56,37 +54,57 @@ export default {
   },
 };
 
-async function handleUploadUrl(request: Request, env: Env, origin: string | null): Promise<Response> {
-  const body = (await request.json()) as { filename?: string; contentType?: string; prefix?: string };
-  const filename = body.filename || "image.png";
-  const contentType = body.contentType || "image/png";
-  const prefix = body.prefix || "designs";
-  const ext = filename.includes(".") ? filename.split(".").pop() : "png";
-  const key = `${prefix}/${Date.now()}-${randomId()}.${ext}`;
+/** POST /api/upload: body = raw image bytes, query ?prefix=originals|previews. Worker writes to R2 and returns publicUrl. */
+async function handleUpload(request: Request, env: Env, origin: string | null): Promise<Response> {
+  console.log("[R2] POST /api/upload received, Origin:", origin ?? "(none)");
 
-  const accountId = env.R2_ACCOUNT_ID;
-  const bucket = env.R2_BUCKET_NAME;
-  const endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
-  const objectUrl = `${endpoint}/${bucket}/${key}`;
+  if (!env.BUCKET) {
+    console.error("[R2] Missing BUCKET binding");
+    return new Response(
+      JSON.stringify({ error: "Server misconfigured: R2 bucket binding missing" }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+    );
+  }
+  if (!env.PUBLIC_BASE_URL) {
+    console.error("[R2] Missing PUBLIC_BASE_URL");
+    return new Response(
+      JSON.stringify({ error: "Server misconfigured: PUBLIC_BASE_URL missing" }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+    );
+  }
 
-  const aws = new AwsClient({
-    accessKeyId: env.R2_ACCESS_KEY_ID,
-    secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-    service: "s3",
-    region: "auto",
-  });
+  const url = new URL(request.url);
+  const prefix = url.searchParams.get("prefix") || "designs";
+  const key = `${prefix}/${Date.now()}-${randomId()}.png`;
+  const contentType = request.headers.get("Content-Type") || "image/png";
 
-  const putRequest = new Request(objectUrl, {
-    method: "PUT",
-    headers: { "Content-Type": contentType },
-  });
-  const signed = await aws.sign(putRequest, { aws: { signQuery: true } });
-  const publicUrl = env.PUBLIC_BASE_URL.endsWith("/") ? env.PUBLIC_BASE_URL + key : env.PUBLIC_BASE_URL + "/" + key;
+  const body = await request.arrayBuffer();
+  if (!body || body.byteLength === 0) {
+    console.error("[R2] Empty body");
+    return new Response(
+      JSON.stringify({ error: "Empty body" }),
+      { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+    );
+  }
+  console.log("[R2] Uploading key:", key, "size:", body.byteLength);
 
-  return new Response(
-    JSON.stringify({ uploadUrl: signed.url, publicUrl, key }),
-    { headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
-  );
+  try {
+    await env.BUCKET.put(key, body, {
+      httpMetadata: { contentType },
+    });
+    const publicUrl = env.PUBLIC_BASE_URL.endsWith("/") ? env.PUBLIC_BASE_URL + key : env.PUBLIC_BASE_URL + "/" + key;
+    console.log("[R2] Upload success:", publicUrl);
+    return new Response(
+      JSON.stringify({ publicUrl, key }),
+      { headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+    );
+  } catch (e) {
+    console.error("[R2] Upload failed:", e);
+    return new Response(
+      JSON.stringify({ error: "Upload failed", detail: e instanceof Error ? e.message : String(e) }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+    );
+  }
 }
 
 function randomId(): string {

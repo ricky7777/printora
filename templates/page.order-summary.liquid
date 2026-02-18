@@ -803,42 +803,30 @@
       return fetch(dataUrl).then(function(r) { return r.blob(); });
     }
 
-    // Upload one image to R2: get presigned URL then PUT. Returns { url, error }.
+    // Upload one image to R2 via Worker (POST body = blob). Returns { url, error }.
     function uploadToR2(blob, prefix, label) {
       const workerBase = window.PRINTORA_WORKER_URL || '';
       if (!workerBase) {
         console.warn('[R2] PRINTORA_WORKER_URL not set, skipping upload for', label);
         return Promise.resolve({ url: '', error: 'Worker URL not set' });
       }
-      const filename = prefix === 'originals' ? 'original.png' : 'preview.png';
       console.log('[R2] Uploading ' + label + '...', 'size:', blob ? blob.size : 0, 'bytes');
-      return fetch(workerBase + '/api/upload-url', {
+      return fetch(workerBase + '/api/upload?prefix=' + encodeURIComponent(prefix), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: filename, contentType: 'image/png', prefix: prefix })
+        headers: { 'Content-Type': 'image/png' },
+        body: blob
       })
         .then(function(res) {
-          if (!res.ok) {
-            return res.text().then(function(errText) {
-              console.error('[R2] ' + label + ' – get upload URL failed:', res.status, errText);
-              return { url: '', error: 'Get upload URL: ' + res.status + ' ' + errText };
-            });
-          }
-          return res.json();
-        })
-        .then(function(data) {
-          if (data.error) {
-            console.error('[R2] ' + label + ' – upload URL response error:', data.error);
-            return { url: '', error: data.error };
-          }
-          return fetch(data.uploadUrl, {
-            method: 'PUT',
-            body: blob,
-            headers: { 'Content-Type': 'image/png' }
-          }).then(function(putRes) {
-            if (!putRes.ok) {
-              console.error('[R2] ' + label + ' – PUT failed:', putRes.status, putRes.statusText);
-              return { url: '', error: 'PUT failed: ' + putRes.status + ' ' + putRes.statusText };
+          return res.text().then(function(text) {
+            var data = {};
+            try { data = JSON.parse(text); } catch (_) { data = { error: text || res.statusText }; }
+            if (!res.ok) {
+              console.error('[R2] ' + label + ' – upload failed:', res.status, data.error || data.detail || text);
+              return { url: '', error: (data.error || data.detail || text || res.statusText) || '' };
+            }
+            if (data.error) {
+              console.error('[R2] ' + label + ' – response error:', data.error);
+              return { url: '', error: data.error };
             }
             console.log('[R2] ' + label + ' upload success:', data.publicUrl || '');
             return { url: data.publicUrl || '', error: '' };
