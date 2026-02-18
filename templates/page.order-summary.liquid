@@ -3,9 +3,9 @@
 {%- comment -%}
   Order Summary Page
   Converted from assets/order-summary.html
-  IMPORTANT: Shopify assets directory is FLAT - no subdirectories allowed!
-  All resources are in assets root
+  Worker URL: set printora_worker_url for R2 preview upload (same as editor)
 {%- endcomment -%}
+{% assign printora_worker_url = "https://printora-worker.risk0917.workers.dev" %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -552,7 +552,7 @@
   </footer>
 
   <script>
-    // Set current year
+    window.PRINTORA_WORKER_URL = "{{ printora_worker_url }}";
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
     // Get order data from sessionStorage (stored via POST-like behavior)
@@ -789,13 +789,39 @@
       document.getElementById('addressError').classList.remove('show');
     });
 
+    // Upload preview canvas to R2 and return public URL, or empty string on failure
+    function uploadPreviewToR2() {
+      const workerBase = window.PRINTORA_WORKER_URL || '';
+      if (!workerBase || !canvas || canvas.width === 0) return Promise.resolve('');
+      return new Promise(function(resolve) {
+        canvas.toBlob(async function(blob) {
+          if (!blob) { resolve(''); return; }
+          try {
+            const res = await fetch(workerBase + '/api/upload-url', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ filename: 'preview.png', contentType: 'image/png', prefix: 'previews' })
+            });
+            if (!res.ok) { resolve(''); return; }
+            const data = await res.json();
+            const putRes = await fetch(data.uploadUrl, {
+              method: 'PUT',
+              body: blob,
+              headers: { 'Content-Type': 'image/png' }
+            });
+            resolve(putRes.ok ? (data.publicUrl || '') : '');
+          } catch (e) {
+            console.error('Order Summary: Preview upload failed', e);
+            resolve('');
+          }
+        }, 'image/png');
+      });
+    }
+
     // Continue button handler
     const continueButton = document.getElementById('continueButton');
-    continueButton.addEventListener('click', function() {
-      // Validate form before proceeding
+    continueButton.addEventListener('click', async function() {
       if (!validateForm()) {
-        console.log('Order Summary: Form validation failed');
-        // Scroll to first error field
         const firstError = document.querySelector('.contact-form-input.error');
         if (firstError) {
           firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -803,20 +829,14 @@
         }
         return;
       }
-      
-      // Get form values
+
       const nickName = document.getElementById('customerNickName').value.trim();
       const email = document.getElementById('customerEmail').value.trim();
       const phoneInput = document.getElementById('customerPhone').value.trim();
-      // Combine +64 prefix with user input
       const phone = phoneInput ? '+64 ' + phoneInput : '';
       const address = document.getElementById('customerAddress').value.trim();
       const notes = document.getElementById('customerNotes').value.trim();
-      
-      // Map price to variant ID
-      // 28 元 = 44509060038725
-      // 35 元 = 44509060071493
-      // 45 元 = 44509060104261
+
       let variantId = '';
       const priceNum = parseFloat(price);
       if (Math.abs(priceNum - 28) < 0.01) {
@@ -830,51 +850,46 @@
         alert('Invalid price. Please contact support.');
         return;
       }
-      
-      // Build Shopify Cart Permalink URL
-      // Format: /cart/variant_id:quantity?checkout[email]=...&checkout[shipping_address][first_name]=...
-      const baseUrl = `/cart/${variantId}:${quantity}`;
+
+      continueButton.disabled = true;
+      continueButton.textContent = 'Uploading preview...';
+      const previewUrl = await uploadPreviewToR2();
+      const originalUrl = (orderData && orderData.originalImageUrl) ? orderData.originalImageUrl : '';
+      continueButton.textContent = 'Continue to Payment';
+
+      const properties = {
+        'Preview URL': previewUrl || '',
+        'Original URL': originalUrl || '',
+        'Size': size || '',
+        'Type': type || '',
+        'T-Shirt Color': tshirtColor === 'black' ? 'Black' : 'White',
+        'Print Size': printSize ? (printSize.charAt(0).toUpperCase() + printSize.slice(1)) : ''
+      };
+      const propertiesJson = JSON.stringify(properties);
+      const propertiesBase64 = btoa(unescape(encodeURIComponent(propertiesJson)));
+
+      const baseUrl = '/cart/' + variantId + ':' + quantity;
       const params = new URLSearchParams();
-      
-      // Add checkout parameters
-      if (email) {
-        params.append('checkout[email]', email);
-      }
-      
-      // Shipping address parameters
+      params.append('properties', propertiesBase64);
+      if (email) params.append('checkout[email]', email);
       if (nickName) {
-        // Use nick name as first name (assuming it's a single name field)
         params.append('checkout[shipping_address][first_name]', nickName);
-        // Set last name to empty or use a default
         params.append('checkout[shipping_address][last_name]', '');
       }
-      
-      if (address) {
-        params.append('checkout[shipping_address][address1]', address);
-      }
-      
-      // Set country to New Zealand (NZ) as default
+      if (address) params.append('checkout[shipping_address][address1]', address);
       params.append('checkout[shipping_address][country]', 'NZ');
-      
-      // Phone number (remove +64 prefix for phone field, or keep it)
-      if (phone) {
-        params.append('checkout[shipping_address][phone]', phone);
-      }
-      
-      // Optional fields - leave empty or set defaults
-      // params.append('checkout[shipping_address][city]', '');
-      // params.append('checkout[shipping_address][province]', '');
-      // params.append('checkout[shipping_address][zip]', '');
-      
-      // Build final URL
+      if (phone) params.append('checkout[shipping_address][phone]', phone);
+
+      if (notes) params.append('attributes[Notes]', notes);
       const checkoutUrl = baseUrl + (params.toString() ? '?' + params.toString() : '');
-      
-      console.log('Order Summary: Navigating to Shopify checkout:', checkoutUrl);
-      console.log('Order Summary: Variant ID:', variantId, 'Quantity:', quantity);
-      console.log('Order Summary: Customer data - Email:', email, 'Nick Name:', nickName, 'Phone:', phone, 'Address:', address);
-      
-      // Navigate to Shopify checkout
-      window.location.href = checkoutUrl;
+      console.log('Order Summary: Navigating to Shopify checkout with design URLs in properties');
+      try {
+        window.location.href = checkoutUrl;
+      } catch (e) {
+        console.error('Order Summary: Redirect failed', e);
+        continueButton.disabled = false;
+        continueButton.textContent = 'Continue to Payment';
+      }
     });
   </script>
 </body>

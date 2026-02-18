@@ -1,0 +1,20 @@
+name = "printora-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# R2 bucket for design images (binding for presigned URL generation)
+# Create bucket in Cloudflare dashboard and enable public access or custom domain
+[vars]
+R2_BUCKET_NAME = "printora"
+R2_ACCOUNT_ID = "7c7f18ffa4701a0349a7ab0884291f82"   # Set via wrangler secret or replace with your account id
+PUBLIC_BASE_URL = "https://printora.co.nz" # e.g. https://pub-xxx.r2.dev or https://designs.printora.co.nz
+MERCHANT_EMAIL = "contact@printora.co.nz"
+
+R2_ACCESS_KEY_ID = "2epF8sKarWise7Rd4MQfCs6U7uNA-OhRmydbYDiv"
+R2_SECRET_ACCESS_KEY = "cb8bcaccc1b649026bf648f474aa75028ba2e7477484142208df35150aca6f25"
+SHOPIFY_WEBHOOK_SECRET = "9b3e97523a57bc742353758c0fb5848214e6613139381b59097ea8fa853d1615"
+# Secrets (set via: wrangler secret put SECRET_NAME)
+# R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY - R2 bucket > Manage R2 API Tokens
+# R2_ACCOUNT_ID - Cloudflare account ID (or set in vars)
+# SHOPIFY_WEBHOOK_SECRET - from Shopify Admin > Settings > Notifications > Webhooks
+# RESEND_API_KEY - from Resend.com (from: use onboarding@resend.dev for testing)

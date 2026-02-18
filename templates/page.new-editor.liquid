@@ -4,7 +4,9 @@
   PrintOra T-Shirt Editor Page
   Pure JavaScript implementation (no Flutter)
   Path: /pages/new-editor
+  Worker URL: set printora_worker_url for R2 upload and webhook (e.g. your Cloudflare Worker URL)
 {%- endcomment -%}
+{% assign printora_worker_url = "https://printora-worker.xxx.workers.dev" %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -370,6 +372,7 @@
       black: '{{ "tee_black.png" | asset_url }}',
       white: '{{ "tee_white.png" | asset_url }}'
     };
+    window.PRINTORA_WORKER_URL = "{{ printora_worker_url }}";
   </script>
   <script src="{{ 'editor.js' | asset_url }}" defer></script>
   <script>
