@@ -555,10 +555,6 @@
     window.PRINTORA_WORKER_URL = "{{ printora_worker_url }}";
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-    // TEST MODE: When true, checkout amount is always $1 (quantity=1). Create a $1 product in Shopify and set its variant ID.
-    const TEST_PAYMENT_1_DOLLAR = true;
-    const TEST_VARIANT_ID_1_DOLLAR = '44660768473157'; // Replace with your $1 test product variant ID from Shopify Admin
-
     // Get order data from sessionStorage (stored via POST-like behavior)
     let orderData = null;
     try {
@@ -891,24 +887,17 @@
       const notes = document.getElementById('customerNotes').value.trim();
 
       let variantId = '';
-      let checkoutQuantity = quantity;
-      if (TEST_PAYMENT_1_DOLLAR) {
-        variantId = TEST_VARIANT_ID_1_DOLLAR;
-        checkoutQuantity = 1;
-        console.log('Order Summary: TEST MODE - using $1 amount for checkout (variant:', variantId, ', qty: 1)');
+      const priceNum = parseFloat(price);
+      if (Math.abs(priceNum - 28) < 0.01) {
+        variantId = '44509060038725';
+      } else if (Math.abs(priceNum - 35) < 0.01) {
+        variantId = '44509060071493';
+      } else if (Math.abs(priceNum - 45) < 0.01) {
+        variantId = '44509060104261';
       } else {
-        const priceNum = parseFloat(price);
-        if (Math.abs(priceNum - 28) < 0.01) {
-          variantId = '44509060038725';
-        } else if (Math.abs(priceNum - 35) < 0.01) {
-          variantId = '44509060071493';
-        } else if (Math.abs(priceNum - 45) < 0.01) {
-          variantId = '44509060104261';
-        } else {
-          console.error('Order Summary: Unknown price, cannot determine variant ID. Price:', priceNum);
-          alert('Invalid price. Please contact support.');
-          return;
-        }
+        console.error('Order Summary: Unknown price, cannot determine variant ID. Price:', priceNum);
+        alert('Invalid price. Please contact support.');
+        return;
       }
 
       continueButton.disabled = true;
@@ -928,10 +917,11 @@
       };
       if (previewUrl) properties['Preview URL'] = previewUrl;
       if (originalUrl) properties['Original URL'] = originalUrl;
+      if (phone) properties['Contact Phone'] = phone;
       var propertiesJson = JSON.stringify(properties);
       var propertiesBase64 = btoa(unescape(encodeURIComponent(propertiesJson)));
 
-      const baseUrl = '/cart/' + variantId + ':' + checkoutQuantity;
+      const baseUrl = '/cart/' + variantId + ':' + quantity;
       const params = new URLSearchParams();
       params.append('properties', propertiesBase64);
       if (email) params.append('checkout[email]', email);
@@ -944,6 +934,7 @@
       if (phone) params.append('checkout[shipping_address][phone]', phone);
 
       if (notes) params.append('attributes[Notes]', notes);
+      if (phone) params.append('attributes[Contact Phone]', phone);
       const checkoutUrl = baseUrl + (params.toString() ? '?' + params.toString() : '');
       console.log('Order Summary: Navigating to Shopify checkout with design URLs in properties');
       try {
