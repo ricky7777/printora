@@ -803,15 +803,27 @@
       return fetch(dataUrl).then(function(r) { return r.blob(); });
     }
 
+    // Build identifiable filename base: YYYYMMDD-HHmm-customer-size-color
+    function buildUploadName(nickName, size, tshirtColor, suffix) {
+      var now = new Date();
+      var dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+      var timeStr = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+      var safeName = (nickName || 'customer').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').slice(0, 20);
+      return dateStr + '-' + timeStr + '-' + safeName + '-' + (size || '') + '-' + (tshirtColor || '') + (suffix ? '-' + suffix : '');
+    }
+
     // Upload one image to R2 via Worker (POST body = blob). Returns { url, error }.
-    function uploadToR2(blob, prefix, label) {
+    // Optional 4th arg: custom name for identifiable filename.
+    function uploadToR2(blob, prefix, label, customName) {
       const workerBase = window.PRINTORA_WORKER_URL || '';
       if (!workerBase) {
         console.warn('[R2] PRINTORA_WORKER_URL not set, skipping upload for', label);
         return Promise.resolve({ url: '', error: 'Worker URL not set' });
       }
-      console.log('[R2] Uploading ' + label + '...', 'size:', blob ? blob.size : 0, 'bytes');
-      return fetch(workerBase + '/api/upload?prefix=' + encodeURIComponent(prefix), {
+      var uploadUrl = workerBase + '/api/upload?prefix=' + encodeURIComponent(prefix);
+      if (customName) uploadUrl += '&name=' + encodeURIComponent(customName);
+      console.log('[R2] Uploading ' + label + '...', 'size:', blob ? blob.size : 0, 'bytes', customName ? 'name: ' + customName : '');
+      return fetch(uploadUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'image/png' },
         body: blob
@@ -839,18 +851,19 @@
     }
 
     // Upload original image (data URL) to R2, return public URL or ''.
-    function uploadOriginalToR2() {
+    function uploadOriginalToR2(uploadName) {
       if (!originalImageDataUrl) {
         console.log('[R2] No original image in sessionStorage, skipping original upload');
         return Promise.resolve('');
       }
       return dataUrlToBlob(originalImageDataUrl).then(function(blob) {
-        return uploadToR2(blob, 'originals', 'Original').then(function(r) { return r.url; });
+        var name = uploadName ? uploadName + '-original' : null;
+        return uploadToR2(blob, 'originals', 'Original', name).then(function(r) { return r.url; });
       });
     }
 
     // Upload preview canvas to R2, return public URL or ''.
-    function uploadPreviewToR2() {
+    function uploadPreviewToR2(uploadName) {
       if (!canvas || canvas.width === 0) {
         console.log('[R2] No preview canvas, skipping preview upload');
         return Promise.resolve('');
@@ -862,7 +875,8 @@
             resolve('');
             return;
           }
-          uploadToR2(blob, 'previews', 'Preview').then(function(r) { resolve(r.url); });
+          var name = uploadName ? uploadName + '-preview' : null;
+          uploadToR2(blob, 'previews', 'Preview', name).then(function(r) { resolve(r.url); });
         }, 'image/png');
       });
     }
@@ -902,9 +916,10 @@
 
       continueButton.disabled = true;
       continueButton.textContent = 'Uploading images...';
-      console.log('[R2] Start uploading (original then preview) on Continue to Payment');
-      const originalUrl = await uploadOriginalToR2();
-      const previewUrl = await uploadPreviewToR2();
+      var uploadName = buildUploadName(nickName, size, tshirtColor);
+      console.log('[R2] Start uploading (original then preview) on Continue to Payment, name base:', uploadName);
+      const originalUrl = await uploadOriginalToR2(uploadName);
+      const previewUrl = await uploadPreviewToR2(uploadName);
       console.log('[R2] Done. Original URL:', originalUrl || '(none)');
       console.log('[R2] Done. Preview URL:', previewUrl || '(none)');
       continueButton.textContent = 'Continue to Payment';

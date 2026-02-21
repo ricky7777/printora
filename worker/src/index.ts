@@ -54,7 +54,7 @@ export default {
   },
 };
 
-/** POST /api/upload: body = raw image bytes, query ?prefix=originals|previews. Worker writes to R2 and returns publicUrl. */
+/** POST /api/upload: body = raw image bytes. Query: ?prefix=originals|previews, ?name=custom-name (optional, for identifiable filename). Worker writes to R2 and returns publicUrl. */
 async function handleUpload(request: Request, env: Env, origin: string | null): Promise<Response> {
   console.log("[R2] POST /api/upload received, Origin:", origin ?? "(none)");
 
@@ -75,7 +75,13 @@ async function handleUpload(request: Request, env: Env, origin: string | null): 
 
   const url = new URL(request.url);
   const prefix = url.searchParams.get("prefix") || "designs";
-  const key = `${prefix}/${Date.now()}-${randomId()}.png`;
+  const nameParam = url.searchParams.get("name");
+  const sanitizedName = nameParam
+    ? nameParam.replace(/[^a-zA-Z0-9_-]/g, "-").replace(/-+/g, "-").slice(0, 80)
+    : "";
+  const key = sanitizedName
+    ? `${prefix}/${sanitizedName}-${Date.now()}.png`
+    : `${prefix}/${Date.now()}-${randomId()}.png`;
   const contentType = request.headers.get("Content-Type") || "image/png";
 
   const body = await request.arrayBuffer();
