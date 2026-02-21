@@ -204,21 +204,24 @@ function buildOrderEmailHtml(payload: ShopifyOrderPayload): string {
     : "";
   const firstItem = payload.line_items?.[0];
   const props = firstItem?.properties ?? [];
+  const shippingAddrFromProps = getProperty(props, "Shipping Address");
+  const displayAddress = addrLine || shippingAddrFromProps || "-";
   const previewUrl = getProperty(props, "Preview URL");
   const originalUrl = getProperty(props, "Original URL");
   const size = getProperty(props, "Size") || "-";
   const type = getProperty(props, "Type") || "-";
   const tshirtColor = getProperty(props, "T-Shirt Color") || "-";
   const printSize = getProperty(props, "Print Size") || "-";
+  const notesFromProps = getProperty(props, "Notes");
 
   const noteAttr = payload.note_attributes ?? [];
-  const noteVal = payload.note || getNoteAttr(noteAttr, "Notes") || getNoteAttr(noteAttr, "note") || "";
+  const noteVal = payload.note || getNoteAttr(noteAttr, "Notes") || getNoteAttr(noteAttr, "note") || notesFromProps || "";
 
   let body = `
     <h2>Order #${payload.order_number ?? payload.id}</h2>
     <p><strong>Customer:</strong> ${payload.email ?? "-"}</p>
-    <p><strong>Shipping:</strong> ${addr?.first_name ?? ""} ${addr?.last_name ?? ""} | ${addrLine}</p>
-    <p><strong>Phone:</strong> ${addr?.phone ?? "-"}</p>
+    <p><strong>Shipping:</strong> ${addr?.first_name ?? ""} ${addr?.last_name ?? ""} | ${displayAddress}</p>
+    <p><strong>Phone:</strong> ${addr?.phone || getProperty(props, "Contact Phone") || "-"}</p>
     <p><strong>Total:</strong> ${payload.total_price ?? "-"} ${payload.financial_status ?? ""}</p>
     <hr/>
     <h3>Design details</h3>
