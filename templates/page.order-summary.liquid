@@ -514,10 +514,55 @@
                 id="customerAddress" 
                 name="address" 
                 class="contact-form-input" 
-                placeholder="Enter your address"
+                placeholder="Street address, e.g. 123 Main St"
                 required
               >
               <div class="error-message" id="addressError">Please enter your address</div>
+            </div>
+
+            <div class="contact-form-group">
+              <label for="customerCity" class="contact-form-label">
+                City <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="customerCity" 
+                name="city" 
+                class="contact-form-input" 
+                placeholder="e.g. Auckland"
+                required
+              >
+              <div class="error-message" id="cityError">Please enter your city</div>
+            </div>
+
+            <div class="contact-form-group">
+              <label for="customerProvince" class="contact-form-label">
+                State / Region <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="customerProvince" 
+                name="province" 
+                class="contact-form-input" 
+                placeholder="e.g. Auckland"
+                required
+              >
+              <div class="error-message" id="provinceError">Please enter state or region</div>
+            </div>
+
+            <div class="contact-form-group">
+              <label for="customerZip" class="contact-form-label">
+                Postcode <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="customerZip" 
+                name="zip" 
+                class="contact-form-input" 
+                placeholder="e.g. 0622"
+                required
+              >
+              <div class="error-message" id="zipError">Please enter your postcode</div>
             </div>
 
             <div class="contact-form-group">
@@ -778,6 +823,45 @@
         addressError.classList.remove('show');
       }
       
+      // Validate city
+      const cityInput = document.getElementById('customerCity');
+      const cityError = document.getElementById('cityError');
+      const city = cityInput.value.trim();
+      if (!city) {
+        cityInput.classList.add('error');
+        cityError.classList.add('show');
+        isValid = false;
+      } else {
+        cityInput.classList.remove('error');
+        cityError.classList.remove('show');
+      }
+      
+      // Validate province
+      const provinceInput = document.getElementById('customerProvince');
+      const provinceError = document.getElementById('provinceError');
+      const province = provinceInput.value.trim();
+      if (!province) {
+        provinceInput.classList.add('error');
+        provinceError.classList.add('show');
+        isValid = false;
+      } else {
+        provinceInput.classList.remove('error');
+        provinceError.classList.remove('show');
+      }
+      
+      // Validate zip
+      const zipInput = document.getElementById('customerZip');
+      const zipError = document.getElementById('zipError');
+      const zip = zipInput.value.trim();
+      if (!zip) {
+        zipInput.classList.add('error');
+        zipError.classList.add('show');
+        isValid = false;
+      } else {
+        zipInput.classList.remove('error');
+        zipError.classList.remove('show');
+      }
+      
       return isValid;
     }
     
@@ -800,6 +884,21 @@
     document.getElementById('customerAddress').addEventListener('input', function() {
       this.classList.remove('error');
       document.getElementById('addressError').classList.remove('show');
+    });
+    
+    document.getElementById('customerCity').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('cityError').classList.remove('show');
+    });
+    
+    document.getElementById('customerProvince').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('provinceError').classList.remove('show');
+    });
+    
+    document.getElementById('customerZip').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('zipError').classList.remove('show');
     });
 
     // Convert data URL to Blob
@@ -902,6 +1001,9 @@
       const phoneInput = document.getElementById('customerPhone').value.trim();
       const phone = phoneInput ? '+64 ' + phoneInput : '';
       const address = document.getElementById('customerAddress').value.trim();
+      const city = document.getElementById('customerCity').value.trim();
+      const province = document.getElementById('customerProvince').value.trim();
+      const zip = document.getElementById('customerZip').value.trim();
       const notes = document.getElementById('customerNotes').value.trim();
 
       let variantId = '';
@@ -956,10 +1058,16 @@
         params.append('checkout[shipping_address][last_name]', '');
       }
       if (address) params.append('checkout[shipping_address][address1]', address);
+      if (city) params.append('checkout[shipping_address][city]', city);
+      if (province) params.append('checkout[shipping_address][province]', province);
+      if (zip) params.append('checkout[shipping_address][zip]', zip);
       params.append('checkout[shipping_address][country]', 'NZ');
       if (phone) params.append('checkout[shipping_address][phone]', phone);
 
-      if (notes) params.append('attributes[Notes]', notes);
+      if (notes) {
+        params.append('note', notes);
+        params.append('attributes[Notes]', notes);
+      }
       if (phone) params.append('attributes[Contact Phone]', phone);
       const checkoutUrl = baseUrl + (params.toString() ? '?' + params.toString() : '');
       console.log('Order Summary: Navigating to Shopify checkout with design URLs in properties');

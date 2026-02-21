@@ -192,6 +192,11 @@ function getProperty(props: Array<{ name: string; value: string }> | undefined, 
   return p ? p.value : "";
 }
 
+function getNoteAttr(attrs: Array<{ name: string; value: string }>, name: string): string {
+  const a = attrs.find((x) => x.name === name);
+  return a ? a.value : "";
+}
+
 function buildOrderEmailHtml(payload: ShopifyOrderPayload): string {
   const addr = payload.shipping_address;
   const addrLine = addr
@@ -207,7 +212,7 @@ function buildOrderEmailHtml(payload: ShopifyOrderPayload): string {
   const printSize = getProperty(props, "Print Size") || "-";
 
   const noteAttr = payload.note_attributes ?? [];
-  const noteVal = payload.note || noteAttr.find((a) => a.name === "note")?.value || "";
+  const noteVal = payload.note || getNoteAttr(noteAttr, "Notes") || getNoteAttr(noteAttr, "note") || "";
 
   let body = `
     <h2>Order #${payload.order_number ?? payload.id}</h2>
