@@ -555,6 +555,10 @@
     window.PRINTORA_WORKER_URL = "{{ printora_worker_url }}";
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
+    // TEST MODE: When true, checkout amount is always $1 (quantity=1, variant 44660768473157)
+    const TEST_PAYMENT_1_DOLLAR = true;
+    const TEST_VARIANT_ID_1_DOLLAR = '44660768473157';
+
     // Get order data from sessionStorage (stored via POST-like behavior)
     let orderData = null;
     try {
@@ -901,17 +905,24 @@
       const notes = document.getElementById('customerNotes').value.trim();
 
       let variantId = '';
-      const priceNum = parseFloat(price);
-      if (Math.abs(priceNum - 28) < 0.01) {
-        variantId = '44509060038725';
-      } else if (Math.abs(priceNum - 35) < 0.01) {
-        variantId = '44509060071493';
-      } else if (Math.abs(priceNum - 45) < 0.01) {
-        variantId = '44509060104261';
+      let checkoutQuantity = quantity;
+      if (TEST_PAYMENT_1_DOLLAR) {
+        variantId = TEST_VARIANT_ID_1_DOLLAR;
+        checkoutQuantity = 1;
+        console.log('Order Summary: TEST MODE - $1 checkout (variant:', variantId, ', qty: 1)');
       } else {
-        console.error('Order Summary: Unknown price, cannot determine variant ID. Price:', priceNum);
-        alert('Invalid price. Please contact support.');
-        return;
+        const priceNum = parseFloat(price);
+        if (Math.abs(priceNum - 28) < 0.01) {
+          variantId = '44509060038725';
+        } else if (Math.abs(priceNum - 35) < 0.01) {
+          variantId = '44509060071493';
+        } else if (Math.abs(priceNum - 45) < 0.01) {
+          variantId = '44509060104261';
+        } else {
+          console.error('Order Summary: Unknown price, cannot determine variant ID. Price:', priceNum);
+          alert('Invalid price. Please contact support.');
+          return;
+        }
       }
 
       continueButton.disabled = true;
@@ -936,7 +947,7 @@
       var propertiesJson = JSON.stringify(properties);
       var propertiesBase64 = btoa(unescape(encodeURIComponent(propertiesJson)));
 
-      const baseUrl = '/cart/' + variantId + ':' + quantity;
+      const baseUrl = '/cart/' + variantId + ':' + checkoutQuantity;
       const params = new URLSearchParams();
       params.append('properties', propertiesBase64);
       if (email) params.append('checkout[email]', email);
