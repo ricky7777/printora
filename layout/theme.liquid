@@ -1,9 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ request.locale.iso_code | default: 'en' }}">
   <head>
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrintOra - Your Design, Your Rules</title>
+    <title>{% if template.name == 'product' %}{{ product.title | escape }} | {% elsif template.name == 'page' and page.title != blank %}{{ page.title | escape }} | {% endif %}{{ shop.name | escape }}{% if template.name == 'index' %} - Custom T-Shirt Printing New Zealand{% endif %}</title>
+    <meta name="description" content="{% if template.name == 'product' %}{{ product.description | strip_html | truncate: 160 | escape }}{% elsif template.name == 'page' and page.content != blank %}{{ page.content | strip_html | truncate: 160 | escape }}{% else %}PrintOra offers custom T-shirt printing in New Zealand. Design your own tee with our online editor. DTF printing, fast delivery, premium quality. From $28 NZD.{% endif %}">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <meta name="robots" content="index, follow">
+    <meta property="og:type" content="{% if template.name == 'product' %}product{% else %}website{% endif %}">
+    <meta property="og:title" content="{% if template.name == 'product' %}{{ product.title | escape }}{% elsif template.name == 'page' and page.title != blank %}{{ page.title | escape }}{% else %}PrintOra - Custom T-Shirt Printing New Zealand{% endif %}">
+    <meta property="og:description" content="{% if template.name == 'product' %}{{ product.description | strip_html | truncate: 200 | escape }}{% else %}Design your own custom T-shirts in New Zealand. Premium DTF printing, fast delivery. Upload your design and order online.{% endif %}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:site_name" content="{{ shop.name | escape }}">
+    <meta property="og:locale" content="{{ request.locale.iso_code | replace: '-', '_' | default: 'en_NZ' }}">
+    {% if template.name == 'product' and product.featured_image %}<meta property="og:image" content="https:{{ product.featured_image | image_url: width: 1200 }}">{% elsif template.name == 'index' %}<meta property="og:image" content="https:{{ 'hero-dtf.jpg' | asset_url }}">{% endif %}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% if template.name == 'product' %}{{ product.title | escape }}{% else %}PrintOra - Custom T-Shirt Printing NZ{% endif %}">
+    <meta name="twitter:description" content="{% if template.name == 'product' %}{{ product.description | strip_html | truncate: 200 | escape }}{% else %}Design custom T-shirts in New Zealand. Premium DTF printing from $28.{% endif %}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -53,6 +66,7 @@
             background-color: var(--color-header-hero-bg) !important;
         }
     </style>
+    {% if template.name == 'index' %}<link rel="preload" href="{{ 'hero-dtf.jpg' | asset_url }}" as="image">{% endif %}
     <link rel="stylesheet" href="{{ 'original-inline.css' | asset_url }}">
     
     <script>
@@ -157,6 +171,134 @@
       })();
     </script>
     
+    {% comment %} AEO: Product Schema JSON-LD for AI search engines (Gemini, ChatGPT) {% endcomment %}
+    {% if template.name == 'product' and product %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": {{ product.title | json }},
+      "description": {{ product.description | strip_html | truncate: 200 | json }},
+      "image": {{ product.featured_image | image_url: width: 600 | json }},
+      "brand": {
+        "@type": "Brand",
+        "name": "PrintOra"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
+        "priceCurrency": "NZD",
+        "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+        "url": {{ request.origin | append: product.url | json }},
+        "priceValidUntil": "{{ 'now' | date: '%s' | plus: 31536000 | date: '%Y-%m-%d' }}"
+      }
+    }
+    </script>
+    {% endif %}
+
+    {% comment %} AEO: BreadcrumbList for product pages {% endcomment %}
+    {% if template.name == 'product' and product %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "{{ shop.url }}" },
+        { "@type": "ListItem", "position": 2, "name": {{ product.title | json }}, "item": {{ request.origin | append: product.url | json }} }
+      ]
+    }
+    </script>
+    {% endif %}
+
+    {% comment %} AEO: Organization + WebSite + LocalBusiness JSON-LD (site-wide for AI search) {% endcomment %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "{{ shop.url }}/#organization",
+          "name": "PrintOra",
+          "url": "{{ shop.url }}",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https:{{ 'printora_logo.png' | asset_url }}"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "{{ shop.url }}/#website",
+          "name": "{{ shop.name }}",
+          "url": "{{ shop.url }}",
+          "publisher": { "@id": "{{ shop.url }}/#organization" },
+          "description": "Custom T-shirt printing in New Zealand. Design your own tee with our online editor. DTF printing, fast delivery, premium quality."
+        },
+        {
+          "@type": "LocalBusiness",
+          "@id": "{{ shop.url }}/#localbusiness",
+          "name": "PrintOra",
+          "url": "{{ shop.url }}",
+          "description": "Custom T-shirt printing and design services in New Zealand. Upload your design, choose your size, and get premium DTF-printed tees delivered.",
+          "priceRange": "$28 - $45 NZD",
+          "areaServed": {
+            "@type": "Country",
+            "name": "New Zealand"
+          },
+          "currenciesAccepted": "NZD"
+        }
+      ]
+    }
+    </script>
+
+    {% comment %} AEO: ItemList of pricing options for homepage (helps AI cite PrintOra offerings) {% endcomment %}
+    {% if template.name == 'index' %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "PrintOra Custom T-Shirt Options",
+      "description": "Custom T-shirt printing options in New Zealand",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Small Logo - $28 NZD", "description": "Perfect for chest logos and small designs" },
+        { "@type": "ListItem", "position": 2, "name": "Standard Print - $35 NZD", "description": "Ideal for most designs and graphics" },
+        { "@type": "ListItem", "position": 3, "name": "Large Print - $45 NZD", "description": "Maximum impact for bold designs" }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Where can I get custom T-shirts printed in New Zealand?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "PrintOra offers custom T-shirt printing across New Zealand. Upload your design online, choose from Small Logo ($28), Standard Print ($35), or Large Print ($45), and we deliver in 7-10 working days."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does PrintOra custom T-shirt printing work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use our online design editor to upload your artwork, position it on the tee, and choose size and color. We use DTF (Direct to Film) printing for vibrant, long-lasting designs. Prices start from $28 NZD including GST."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is DTF printing?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DTF (Direct to Film) printing transfers your design onto a special film, then onto the fabric. It produces vibrant colors and durable prints that won't fade or crack, ideal for custom T-shirts."
+          }
+        }
+      ]
+    }
+    </script>
+    {% endif %}
+
     {% comment %} Shopify content_for_header will be injected here {% endcomment %}
     {% if content_for_header %}{{ content_for_header }}{% endif %}
   </head>
