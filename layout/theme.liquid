@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ 'favicon.ico' | asset_url }}">
     <title>{% if template.name == 'product' %}{{ product.title | escape }} | {% elsif template.name == 'page' and page.title != blank %}{{ page.title | escape }} | {% endif %}{{ shop.name | escape }}{% if template.name == 'index' %} - Custom T-Shirt Printing New Zealand{% endif %}</title>
     <meta name="description" content="{% if template.name == 'product' %}{{ product.description | strip_html | truncate: 160 | escape }}{% elsif template.name == 'page' and page.content != blank %}{{ page.content | strip_html | truncate: 160 | escape }}{% else %}PrintOra offers custom T-shirt printing in New Zealand. Design your own tee with our online editor. DTF printing, fast delivery, premium quality. From $28 NZD.{% endif %}">
     <link rel="canonical" href="{{ canonical_url }}">
