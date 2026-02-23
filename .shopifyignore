@@ -1,5 +1,9 @@
 # Shopify ignore file
 config/settings_data.json
+package.json
+package-lock.json
+tailwind.config.js
+src/
 *.log
 .DS_Store
 node_modules/*

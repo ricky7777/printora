@@ -19,26 +19,7 @@
   <meta name="robots" content="noindex, nofollow">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Order Summary - PrintOra">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'mint': '#A8E6CF',
-            'mint-light': '#C8F0E0',
-            'mint-dark': '#88D4AB',
-            'pastel-pink': '#FFB6C1',
-            'soft-gray': '#6B7280',
-            'deep-gray': '#374151'
-          },
-          fontFamily: {
-            'sans': ['Inter', 'system-ui', 'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="stylesheet" href="{{ 'tailwind.css' | asset_url }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
