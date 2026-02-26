@@ -7,7 +7,12 @@
     <title>{% if template.name == 'product' %}{{ product.title | escape }} | {% elsif template.name == 'page' and page.title != blank %}{{ page.title | escape }} | {% endif %}{{ shop.name | escape }}{% if template.name == 'index' %} - Custom T-Shirt Printing New Zealand{% endif %}</title>
     <meta name="description" content="{% if template.name == 'product' %}{{ product.description | strip_html | truncate: 160 | escape }}{% elsif template.name == 'page' and page.content != blank %}{{ page.content | strip_html | truncate: 160 | escape }}{% else %}PrintOra offers custom T-shirt printing in New Zealand. Design your own tee with our online editor. DTF printing, fast delivery, premium quality. From $28 NZD.{% endif %}">
     <link rel="canonical" href="{{ canonical_url }}">
+    {%- comment -%} Use noindex for cart, search, 404 so GSC can index important pages only. For "Blocked by robots.txt" in GSC, check Shopify Admin > Online Store > Preferences (robots.txt is platform-generated). {%- endcomment -%}
+    {%- if template.name == 'cart' or template.name == 'search' or template.name == '404' or template.name == 'password' -%}
+    <meta name="robots" content="noindex, nofollow">
+    {%- else -%}
     <meta name="robots" content="index, follow">
+    {%- endif -%}
     <meta property="og:type" content="{% if template.name == 'product' %}product{% else %}website{% endif %}">
     <meta property="og:title" content="{% if template.name == 'product' %}{{ product.title | escape }}{% elsif template.name == 'page' and page.title != blank %}{{ page.title | escape }}{% else %}PrintOra - Custom T-Shirt Printing New Zealand{% endif %}">
     <meta property="og:description" content="{% if template.name == 'product' %}{{ product.description | strip_html | truncate: 200 | escape }}{% else %}Design your own custom T-shirts in New Zealand. Premium DTF printing, fast delivery. Upload your design and order online.{% endif %}">
