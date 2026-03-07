@@ -1,0 +1,27 @@
+{%- comment -%}
+  PrintOra robots.txt - optimised for NZ custom T-shirt store
+  - Uses Shopify default groups; removes /policies/ block so privacy/terms can be indexed (trust for NZ e-commerce)
+  - Disallows /apps/, /api/, /v1/, /cdn to avoid 404/4xx in Google Search Console
+  - Keeps cart, checkout, account, search disallowed
+{%- endcomment -%}
+
+{% for group in robots.default_groups %}
+  {{- group.user_agent }}
+
+  {%- for rule in group.rules -%}
+    {%- comment -%} Allow /policies/ to be crawled (privacy policy, terms for NZ trust) {%- endcomment -%}
+    {%- unless rule.directive == 'Disallow' and rule.value == '/policies/' -%}
+      {{ rule }}
+    {%- endunless -%}
+  {%- endfor -%}
+
+  {%- comment -%} Block /apps/, /api/, /v1/, /cdn - avoid 404/4xx in GSC {%- endcomment -%}
+  {{ 'Disallow: /apps/' }}
+  {{ 'Disallow: /api/' }}
+  {{ 'Disallow: /v1/' }}
+  {{ 'Disallow: /cdn' }}
+
+  {%- if group.sitemap != blank -%}
+    {{ group.sitemap }}
+  {%- endif -%}
+{% endfor %}
